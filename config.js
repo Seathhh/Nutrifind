@@ -4,7 +4,7 @@
 // =====================================================================
 
 window.NUTRIFIND_CONFIG = {
-    GEMINI_API_KEY: "AQ.Ab8RN6Jn3SGRDNWiaMa6KWhE6Cw4JsCx9SH0AdqOPJmCYPEDKg",
+    GEMINI_API_KEY: "AQ.Ab8RN6Ivm249EDYQNWAN6N6DeFryk_5oploxmr67NxG9O-nL7Q",
     APP_ID: "nutrifind-local",
     FIREBASE_CONFIG: null
 };
