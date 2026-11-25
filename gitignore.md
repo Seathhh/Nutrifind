@@ -1,0 +1,8 @@
+# Abaikan file konfigurasi rahasia & API Key agar tidak terunggah ke GitHub
+config.js
+.env
+.env.local
+
+# Abaikan file sistem OS
+.DS_Store
+Thumbs.db
