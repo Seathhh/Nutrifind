@@ -1,5 +1,5 @@
 /* ===================================================================== /
-/ NUTRIFIND AI — GAYA KUSTOM EDITORIAL NEO-BRUTALISM & LIGHT/DARK THEME /
+/ NUTRIFIND AI — GAYA KUSTOM EDITORIAL NEO-BRUTALISM                    /
 / ===================================================================== */
 
 body {
@@ -19,84 +19,6 @@ background-color: #FFFFFF;
 border: 2px solid #0B0F17;
 box-shadow: 5px 5px 0px #0B0F17;
 transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.2s ease;
-}
-
-/* ===================================================================== /
-/ TEMA DARK MODE (NEON MINT & AQUA ON DEEP OBSIDIAN)                    /
-/ ===================================================================== */
-body.dark-theme {
-background-color: #070A10;
-color: #F8FAFC;
-}
-body.dark-theme #auth-screen,
-body.dark-theme #main-app {
-background-color: #070A10;
-}
-body.dark-theme .poppy-card {
-background-color: #111827;
-border-color: #334155;
-box-shadow: 5px 5px 0px #000000;
-color: #F8FAFC;
-}
-body.dark-theme .bg-white {
-background-color: #111827 !important;
-color: #F8FAFC;
-}
-body.dark-theme .bg-[#F8FAFC],
-body.dark-theme .bg-[#EAECEF],
-body.dark-theme .bg-[#F2FDF9],
-body.dark-theme .bg-[#ECFDF5],
-body.dark-theme .bg-[#ECFEFF],
-body.dark-theme .bg-[#D1FAE5],
-body.dark-theme .bg-slate-50/40 {
-background-color: #1E293B !important;
-color: #F8FAFC;
-}
-body.dark-theme .text-[#0B0F17],
-body.dark-theme .text-[#0F172A],
-body.dark-theme .text-slate-800 {
-color: #F8FAFC !important;
-}
-body.dark-theme .text-slate-600,
-body.dark-theme .text-slate-500,
-body.dark-theme .text-cyan-900,
-body.dark-theme .text-emerald-900,
-body.dark-theme .text-teal-900,
-body.dark-theme .text-cyan-800,
-body.dark-theme .text-emerald-800 {
-color: #CBD5E1 !important;
-}
-body.dark-theme .border-[#0B0F17],
-body.dark-theme .border-[#0F172A],
-body.dark-theme .border-slate-200,
-body.dark-theme .border-slate-300 {
-border-color: #475569 !important;
-}
-body.dark-theme input,
-body.dark-theme select {
-background-color: #0F172A !important;
-color: #F8FAFC !important;
-border-color: #475569 !important;
-}
-body.dark-theme .bg-[#7BF1C7],
-body.dark-theme .bg-[#6EE7B7],
-body.dark-theme .bg-[#22D3EE],
-body.dark-theme .bg-[#CFFAFE],
-body.dark-theme .bg-amber-300,
-body.dark-theme .bg-rose-100,
-body.dark-theme .bg-rose-200 {
-color: #0B0F17 !important;
-}
-body.dark-theme .bg-[#7BF1C7] *,
-body.dark-theme .bg-[#6EE7B7] *,
-body.dark-theme .bg-[#22D3EE] *,
-body.dark-theme .bg-[#CFFAFE] *,
-body.dark-theme .bg-amber-300 * {
-color: #0B0F17 !important;
-}
-body.dark-theme .pill-btn {
-border-color: #0B0F17 !important;
-box-shadow: 3px 3px 0px #000000;
 }
 
 /* Tombol Kapsul (Pill) */
@@ -136,6 +58,7 @@ background-repeat: repeat;
 .marquee-track {
 display: flex;
 width: max-content;
+white-space: nowrap;
 animation: marqueeScroll 24s linear infinite;
 }
 .marquee-track:hover {
