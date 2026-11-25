@@ -6,7 +6,7 @@
 
 window.NUTRIFIND_CONFIG = {
     // Masukkan Gemini API Key Anda dari Google AI Studio (https://aistudio.google.com/)
-    GEMINI_API_KEY: "MASUKKAN_GEMINI_API_KEY_ANDA_DI_SINI",
+    GEMINI_API_KEY: "AQ.Ab8RN6Jn3SGRDNWiaMa6KWhE6Cw4JsCx9SH0AdqOPJmCYPEDKg",
 
     // (Opsional) Konfigurasi Firebase Firestore jika ingin menyimpan akun secara cloud
     APP_ID: "nutrifind-production",
