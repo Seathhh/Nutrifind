@@ -127,40 +127,6 @@
     <div id="toast-container" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
     <!-- ===================================================================== -->
-    <!-- MODAL PENGATURAN GEMINI API KEY (AMAN DI BROWSER / LOCALSTORAGE)      -->
-    <!-- ===================================================================== -->
-    <div id="apikey-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-[#0B0F17]/75 backdrop-blur-sm">
-        <div class="poppy-card rounded-3xl w-full max-w-md overflow-hidden bg-white flex flex-col animate-fade-in">
-            <div class="bg-[#0B0F17] text-white px-6 py-4 flex items-center justify-between border-b-2 border-[#0B0F17]">
-                <div>
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#22D3EE]">KONFIGURASI AI VISION</span>
-                    <h3 class="text-lg font-extrabold uppercase tracking-tight">GEMINI API KEY</h3>
-                </div>
-                <button type="button" onclick="closeApiKeyModal()" class="p-1.5 rounded-full bg-[#161E2E] hover:bg-slate-700 text-slate-300 hover:text-white transition-colors" title="Tutup">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                <p class="text-xs text-slate-600 font-medium leading-relaxed">
-                    Masukkan <b>Gemini API Key</b> dari Google AI Studio untuk mengaktifkan pemindaian foto makanan nyata secara <i>real-time</i>. Key ini hanya disimpan di browser perangkat Anda (<code>localStorage</code>) dan tidak pernah diunggah ke GitHub.
-                </p>
-                <div>
-                    <label class="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B0F17] mb-1">API Key Google AI Studio</label>
-                    <input type="password" id="custom-gemini-key-input" placeholder="AIzaSy..." class="w-full px-4 py-2.5 rounded-2xl border-2 border-[#0B0F17] text-sm font-mono font-semibold outline-none">
-                </div>
-                <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
-                    <button type="button" onclick="clearCustomApiKey()" class="px-4 py-2.5 bg-rose-100 hover:bg-rose-200 text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn">
-                        HAPUS KEY
-                    </button>
-                    <button type="button" onclick="saveCustomApiKey()" class="flex-1 py-2.5 px-5 bg-[#7BF1C7] hover:bg-[#34D399] text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn">
-                        SIMPAN & AKTIFKAN AI ✨
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================================================================== -->
     <!-- 1. LAYAR AUTENTIKASI (LOGIN & DAFTAR AKUN)                            -->
     <!-- ===================================================================== -->
     <section id="auth-screen" class="min-h-screen flex flex-col justify-between bg-[#EAECEF] relative overflow-hidden">
@@ -176,15 +142,8 @@
                     <span id="auth-db-status-text">MODE MEMORI LOKAL</span>
                 </span>
             </div>
-            <div class="flex items-center gap-2.5">
-                <button type="button" onclick="openApiKeyModal()" class="px-3 py-1 rounded-full bg-[#161E2E] hover:bg-[#1E293B] border border-[#22D3EE] text-[10px] font-extrabold uppercase tracking-wider text-[#22D3EE] flex items-center gap-1 transition-all" title="Atur Gemini API Key">
-                    <span>🔑</span>
-                    <span class="api-status-label">API KEY</span>
-                </button>
-                <button type="button" onclick="toggleTheme()" class="px-3 py-1 rounded-full bg-[#161E2E] hover:bg-[#1E293B] border border-[#7BF1C7] text-[10px] font-extrabold uppercase tracking-wider text-white flex items-center gap-1.5 transition-all" title="Ganti Tema Terang / Gelap">
-                    <span class="theme-toggle-icon">🌙</span>
-                    <span class="theme-toggle-label">DARK MODE</span>
-                </button>
+            <div class="text-[11px] font-extrabold uppercase tracking-widest text-[#7BF1C7]">
+                SMART NUTRITION TRACKER
             </div>
         </div>
 
@@ -497,7 +456,7 @@
                     </div>
                 </div>
 
-                <!-- Ringkasan Kalori & Tombol Aksi -->
+                <!-- Ringkasan Kalori & Tombol Keluar -->
                 <div class="flex items-center gap-2 sm:gap-2.5">
                     <button type="button" onclick="openBmiModal()" class="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#161E2E] hover:bg-[#1E293B] border-2 border-[#7BF1C7] text-left transition-all" title="Atur BMI & Target Kalori">
                         <div>
@@ -513,18 +472,6 @@
                             </div>
                         </div>
                         <svg class="w-4 h-4 text-[#22D3EE]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    </button>
-
-                    <!-- Tombol Pengaturan Gemini API Key -->
-                    <button type="button" onclick="openApiKeyModal()" class="p-2.5 rounded-full bg-[#161E2E] hover:bg-[#1E293B] text-[#22D3EE] border-2 border-[#22D3EE]/70 hover:border-[#22D3EE] transition-all flex items-center gap-1.5" title="Atur Gemini API Key">
-                        <span class="text-sm leading-none">🔑</span>
-                        <span class="api-status-label hidden xl:inline text-[10px] font-extrabold uppercase tracking-wider text-[#22D3EE]">API KEY</span>
-                    </button>
-
-                    <!-- Tombol Pengalih Tema Light / Dark -->
-                    <button type="button" onclick="toggleTheme()" class="p-2.5 rounded-full bg-[#161E2E] hover:bg-[#1E293B] text-[#7BF1C7] border-2 border-[#7BF1C7]/70 hover:border-[#7BF1C7] transition-all flex items-center gap-1.5" title="Ganti Tema Light / Dark">
-                        <span class="theme-toggle-icon text-sm leading-none">🌙</span>
-                        <span class="theme-toggle-label hidden lg:inline text-[10px] font-extrabold uppercase tracking-wider text-white">DARK</span>
                     </button>
 
                     <button type="button" onclick="handleLogout()" class="p-2.5 rounded-full bg-[#161E2E] hover:bg-rose-500/20 text-white border-2 border-slate-700 hover:border-rose-400 transition-colors" title="Keluar Akun">
@@ -586,9 +533,9 @@
                     <!-- KOLOM KIRI: INPUT GAMBAR / KAMERA -->
                     <div class="lg:col-span-5 space-y-5">
                         <div class="poppy-card rounded-3xl p-5 relative">
-                            <button type="button" onclick="openApiKeyModal()" class="absolute -top-3.5 -right-3 bg-[#22D3EE] hover:bg-[#06B6D4] border-2 border-[#0B0F17] shadow-[2px_2px_0px_#0B0F17] px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-[#0B0F17] rotate-3 transition-transform hover:scale-105" title="Klik untuk atur Gemini API Key">
-                                <span id="scanner-ai-badge">AI SIMULASI ✦</span>
-                            </button>
+                            <span class="absolute -top-3.5 -right-3 bg-[#22D3EE] border-2 border-[#0B0F17] shadow-[2px_2px_0px_#0B0F17] px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-[#0B0F17] rotate-3 select-none">
+                                AI VISION ✦
+                            </span>
 
                             <div class="mb-4">
                                 <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">LANGKAH 01</span>
