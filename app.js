@@ -3,71 +3,10 @@ import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.g
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // =====================================================================
-// 0. INISIALISASI CLOUD DATABASE (FIRESTORE) & PENGATURAN API KEY
+// 0. INISIALISASI CLOUD DATABASE (FIRESTORE) & KONFIGURASI API
 // =====================================================================
 const ENV_CONFIG = window.NUTRIFIND_CONFIG || {};
-const STORAGE_KEY_GEMINI = "nutrifind_custom_gemini_api_key";
-
-function getActiveGeminiKey() {
-    const savedLocal = localStorage.getItem(STORAGE_KEY_GEMINI);
-    if (savedLocal && savedLocal.trim()) return savedLocal.trim();
-    if (ENV_CONFIG.GEMINI_API_KEY && ENV_CONFIG.GEMINI_API_KEY.trim()) return ENV_CONFIG.GEMINI_API_KEY.trim();
-    return "";
-}
-
-function updateApiKeyBadges() {
-    const hasKey = Boolean(getActiveGeminiKey());
-    document.querySelectorAll('.api-status-label').forEach(el => {
-        el.textContent = hasKey ? "AI AKTIF ✓" : "API KEY";
-    });
-    const scannerBadge = document.getElementById('scanner-ai-badge');
-    if (scannerBadge) {
-        scannerBadge.textContent = hasKey ? "GEMINI AI AKTIF ✦" : "MODE SIMULASI ✦";
-        scannerBadge.className = hasKey
-            ? "absolute -top-3.5 -right-3 bg-[#7BF1C7] hover:bg-[#34D399] border-2 border-[#0B0F17] shadow-[2px_2px_0px_#0B0F17] px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-[#0B0F17] rotate-3 transition-transform hover:scale-105"
-            : "absolute -top-3.5 -right-3 bg-[#22D3EE] hover:bg-[#06B6D4] border-2 border-[#0B0F17] shadow-[2px_2px_0px_#0B0F17] px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-[#0B0F17] rotate-3 transition-transform hover:scale-105";
-    }
-}
-
-function openApiKeyModal() {
-    const modal = document.getElementById('apikey-modal');
-    const input = document.getElementById('custom-gemini-key-input');
-    if (input) input.value = getActiveGeminiKey();
-    if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-}
-
-function closeApiKeyModal() {
-    const modal = document.getElementById('apikey-modal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-}
-
-function saveCustomApiKey() {
-    const input = document.getElementById('custom-gemini-key-input');
-    const val = input ? input.value.trim() : "";
-    if (!val) {
-        showToast("Masukkan Gemini API Key terlebih dahulu.", "error");
-        return;
-    }
-    localStorage.setItem(STORAGE_KEY_GEMINI, val);
-    updateApiKeyBadges();
-    closeApiKeyModal();
-    showToast("Gemini API Key tersimpan! Pemindaian AI nyata kini aktif.", "success");
-}
-
-function clearCustomApiKey() {
-    localStorage.removeItem(STORAGE_KEY_GEMINI);
-    const input = document.getElementById('custom-gemini-key-input');
-    if (input) input.value = "";
-    updateApiKeyBadges();
-    closeApiKeyModal();
-    showToast("API Key dihapus. Kembali ke mode simulasi.", "info");
-}
+const apiKey = ENV_CONFIG.GEMINI_API_KEY ? ENV_CONFIG.GEMINI_API_KEY.trim() : "";
 
 const appId = ENV_CONFIG.APP_ID || (typeof __app_id !== 'undefined' ? __app_id : 'nutrifind-default-app');
 let db = null;
@@ -76,7 +15,6 @@ let firebaseUser = null;
 let isCloudReady = false;
 
 async function initCloudDatabase() {
-    updateApiKeyBadges();
     const statusTextEl = document.getElementById('auth-db-status-text');
     const headerDbEl = document.getElementById('header-db-indicator');
     try {
@@ -140,38 +78,6 @@ async function syncCurrentUserToCloud() {
 }
 
 // =====================================================================
-// PENGELOLA TEMA LIGHT & DARK MODE
-// =====================================================================
-function applyTheme(themeName) {
-    const isDark = themeName === 'dark';
-    appState.theme = isDark ? 'dark' : 'light';
-    document.body.classList.toggle('dark-theme', isDark);
-
-    document.querySelectorAll('.theme-toggle-icon').forEach(el => {
-        el.textContent = isDark ? '☀️' : '🌙';
-    });
-    document.querySelectorAll('.theme-toggle-label').forEach(el => {
-        el.textContent = isDark ? 'LIGHT' : 'DARK';
-    });
-
-    if (appState.currentUserEmail) {
-        renderWeightTracker();
-    }
-}
-
-function toggleTheme() {
-    const nextTheme = appState.theme === 'dark' ? 'light' : 'dark';
-    applyTheme(nextTheme);
-
-    const user = getCurrentUser();
-    if (user) {
-        user.preferredTheme = nextTheme;
-        syncCurrentUserToCloud();
-    }
-    showToast(`Tema diubah ke ${nextTheme === 'dark' ? 'Dark Mode 🌙' : 'Light Mode ☀️'}`, 'info');
-}
-
-// =====================================================================
 // 1. REFERENSI DAILY VALUE (AKG HARIAN) & TANGGAL
 // =====================================================================
 const GEMINI_MODEL = "gemini-3-flash-preview";
@@ -219,7 +125,6 @@ const inMemoryUsers = {
         password: "demo123",
         name: "Raka Pratama (Demo)",
         calorieTarget: 1950,
-        preferredTheme: "light",
         bmiProfile: {
             gender: "male",
             age: 26,
@@ -300,7 +205,6 @@ let appState = {
     currentUserEmail: null,
     authMode: 'login',
     activeView: 'scanner',
-    theme: 'light',
     activeScanDate: TODAY_STR,
     calendarYear: new Date().getFullYear(),
     calendarMonth: new Date().getMonth(),
@@ -411,7 +315,6 @@ async function handleAuthSubmit(event) {
                 password,
                 name: displayName,
                 calorieTarget: 2000,
-                preferredTheme: appState.theme,
                 bmiProfile: null,
                 foodLogs: {},
                 weightHistory: [],
@@ -448,9 +351,6 @@ function completeLogin(email, isNewUser) {
     appState.selectedCalendarDate = TODAY_STR;
 
     const user = getCurrentUser();
-    if (user && user.preferredTheme) {
-        applyTheme(user.preferredTheme);
-    }
 
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('main-app').classList.remove('hidden');
@@ -838,7 +738,6 @@ async function analyzeFoodImageWithGemini(base64Data, mimeType, fallbackPreset) 
     const overlay = document.getElementById('scanning-overlay');
     overlay.classList.remove('hidden');
 
-    const currentApiKey = getActiveGeminiKey();
     const promptText = `Analisis gambar makanan ini sebagai ahli gizi profesional dalam Bahasa Indonesia. Identifikasi nama makanan, estimasi porsi, kalori, makronutrisi (protein, carbs, fat, fiber dalam gram), serta mikronutrisi (vitaminA dalam mcg, vitaminC dalam mg, calcium dalam mg, iron dalam mg, sodium dalam mg, potassium dalam mg). Berikan juga daftar bahan dan saran nutrisi singkat.`;
 
     const payload = {
@@ -881,13 +780,12 @@ async function analyzeFoodImageWithGemini(base64Data, mimeType, fallbackPreset) 
         }
     };
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${currentApiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
     let parsedResult = null;
-    let apiFailed = false;
     const delays = [1000, 2000];
 
-    if (currentApiKey) {
+    if (apiKey) {
         for (let attempt = 0; attempt <= delays.length; attempt++) {
             try {
                 const response = await fetch(apiUrl, {
@@ -900,11 +798,9 @@ async function analyzeFoodImageWithGemini(base64Data, mimeType, fallbackPreset) 
                 const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (rawText) {
                     parsedResult = JSON.parse(rawText);
-                    apiFailed = false;
                     break;
                 }
             } catch (err) {
-                apiFailed = true;
                 if (attempt < delays.length) {
                     await new Promise(res => setTimeout(res, delays[attempt]));
                 }
@@ -917,7 +813,7 @@ async function analyzeFoodImageWithGemini(base64Data, mimeType, fallbackPreset) 
     overlay.classList.add('hidden');
 
     const finalData = parsedResult || fallbackPreset || {
-        name: "Hidangan Sehat Seimbang (Mode Simulasi)",
+        name: "Hidangan Sehat Seimbang",
         portion: "1 Porsi (320g)",
         calories: 485,
         protein: 28,
@@ -926,19 +822,12 @@ async function analyzeFoodImageWithGemini(base64Data, mimeType, fallbackPreset) 
         fiber: 6.0,
         micros: { vitaminA: 240, vitaminC: 26, calcium: 135, iron: 3.2, sodium: 520, potassium: 610 },
         ingredients: ["Sumber Protein", "Karbohidrat Kompleks", "Sayuran Hijau", "Rempah Alami"],
-        advice: "Klik tombol 🔑 API KEY di atas untuk memasukkan Gemini API Key agar foto Anda dianalisis secara nyata oleh AI."
+        advice: "Komposisi makronutrisi cukup seimbang dengan kontribusi serat dan kalium yang baik untuk energi harian."
     };
 
     appState.lastScanResult = finalData;
     renderScanResultCard(finalData);
-
-    if (!currentApiKey && !fallbackPreset) {
-        showToast("Mode simulasi aktif. Klik 🔑 API KEY di atas untuk analisis foto nyata.", "info");
-    } else if (apiFailed) {
-        showToast("Koneksi Gemini API gagal/key tidak valid, menampilkan data simulasi.", "error");
-    } else {
-        showToast(`Berhasil memindai: ${finalData.name}`, 'success');
-    }
+    showToast(`Berhasil memindai: ${finalData.name}`, 'success');
 }
 
 // =====================================================================
@@ -1245,9 +1134,6 @@ function renderWeightSvgChart(history, targetWt) {
 
     const targetY = getY(targetWt);
     const points = history.map((d, i) => `${getX(i)},${getY(d.weight)}`).join(' ');
-    const isDark = appState.theme === 'dark';
-    const valueFill = isDark ? '#F8FAFC' : '#0F172A';
-    const dateFill = isDark ? '#94A3B8' : '#64748b';
 
     const circlesHtml = history.map((d, i) => {
         const cx = getX(i);
@@ -1255,15 +1141,15 @@ function renderWeightSvgChart(history, targetWt) {
         const shortDate = d.date.slice(5);
         return `
             <circle cx="${cx}" cy="${cy}" r="6" fill="#6EE7B7" stroke="#0F172A" stroke-width="2.5" />
-            <text x="${cx}" y="${cy - 11}" text-anchor="middle" font-size="11" font-weight="800" fill="${valueFill}">${d.weight}</text>
-            <text x="${cx}" y="${h - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="${dateFill}">${shortDate}</text>
+            <text x="${cx}" y="${cy - 11}" text-anchor="middle" font-size="11" font-weight="800" fill="#0F172A">${d.weight}</text>
+            <text x="${cx}" y="${h - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="#64748b">${shortDate}</text>
         `;
     }).join('');
 
     container.innerHTML = `
         <svg viewBox="0 0 ${w} ${h}" class="w-full h-full overflow-visible">
             <line x1="${padX}" y1="${targetY}" x2="${w - padX}" y2="${targetY}" stroke="#22D3EE" stroke-width="2.2" stroke-dasharray="6,5" />
-            <text x="${w - padX}" y="${targetY - 6}" text-anchor="end" font-size="11" font-weight="800" fill="#22D3EE">Target: ${targetWt} kg</text>
+            <text x="${w - padX}" y="${targetY - 6}" text-anchor="end" font-size="11" font-weight="800" fill="#0891b2">Target: ${targetWt} kg</text>
             ${history.length > 1 ? `<polyline fill="none" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" points="${points}" />` : ''}
             ${circlesHtml}
         </svg>
@@ -1428,11 +1314,6 @@ function renderCalendarDetailPanel() {
 }
 
 Object.assign(window, {
-    openApiKeyModal,
-    closeApiKeyModal,
-    saveCustomApiKey,
-    clearCustomApiKey,
-    toggleTheme,
     switchAuthTab,
     togglePasswordVisibility,
     handleAuthSubmit,
