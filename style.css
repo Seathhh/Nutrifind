@@ -1,0 +1,192 @@
+/* ===================================================================== /
+/ NUTRIFIND AI — GAYA KUSTOM EDITORIAL NEO-BRUTALISM & LIGHT/DARK THEME /
+/ ===================================================================== */
+
+body {
+font-family: 'Plus Jakarta Sans', sans-serif;
+background-color: #EAECEF;
+color: #0B0F17;
+}
+
+h1, h2, h3, .font-poppy {
+font-family: 'Syne', 'Fredoka', sans-serif;
+letter-spacing: -0.02em;
+}
+
+/* Kartu Editorial Bersih & Tegas */
+.poppy-card {
+background-color: #FFFFFF;
+border: 2px solid #0B0F17;
+box-shadow: 5px 5px 0px #0B0F17;
+transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.2s ease;
+}
+
+/* ===================================================================== /
+/ TEMA DARK MODE (NEON MINT & AQUA ON DEEP OBSIDIAN)                    /
+/ ===================================================================== */
+body.dark-theme {
+background-color: #070A10;
+color: #F8FAFC;
+}
+body.dark-theme #auth-screen,
+body.dark-theme #main-app {
+background-color: #070A10;
+}
+body.dark-theme .poppy-card {
+background-color: #111827;
+border-color: #334155;
+box-shadow: 5px 5px 0px #000000;
+color: #F8FAFC;
+}
+body.dark-theme .bg-white {
+background-color: #111827 !important;
+color: #F8FAFC;
+}
+body.dark-theme .bg-[#F8FAFC],
+body.dark-theme .bg-[#EAECEF],
+body.dark-theme .bg-[#F2FDF9],
+body.dark-theme .bg-[#ECFDF5],
+body.dark-theme .bg-[#ECFEFF],
+body.dark-theme .bg-[#D1FAE5],
+body.dark-theme .bg-slate-50/40 {
+background-color: #1E293B !important;
+color: #F8FAFC;
+}
+body.dark-theme .text-[#0B0F17],
+body.dark-theme .text-[#0F172A],
+body.dark-theme .text-slate-800 {
+color: #F8FAFC !important;
+}
+body.dark-theme .text-slate-600,
+body.dark-theme .text-slate-500,
+body.dark-theme .text-cyan-900,
+body.dark-theme .text-emerald-900,
+body.dark-theme .text-teal-900,
+body.dark-theme .text-cyan-800,
+body.dark-theme .text-emerald-800 {
+color: #CBD5E1 !important;
+}
+body.dark-theme .border-[#0B0F17],
+body.dark-theme .border-[#0F172A],
+body.dark-theme .border-slate-200,
+body.dark-theme .border-slate-300 {
+border-color: #475569 !important;
+}
+body.dark-theme input,
+body.dark-theme select {
+background-color: #0F172A !important;
+color: #F8FAFC !important;
+border-color: #475569 !important;
+}
+body.dark-theme .bg-[#7BF1C7],
+body.dark-theme .bg-[#6EE7B7],
+body.dark-theme .bg-[#22D3EE],
+body.dark-theme .bg-[#CFFAFE],
+body.dark-theme .bg-amber-300,
+body.dark-theme .bg-rose-100,
+body.dark-theme .bg-rose-200 {
+color: #0B0F17 !important;
+}
+body.dark-theme .bg-[#7BF1C7] *,
+body.dark-theme .bg-[#6EE7B7] *,
+body.dark-theme .bg-[#22D3EE] *,
+body.dark-theme .bg-[#CFFAFE] *,
+body.dark-theme .bg-amber-300 * {
+color: #0B0F17 !important;
+}
+body.dark-theme .pill-btn {
+border-color: #0B0F17 !important;
+box-shadow: 3px 3px 0px #000000;
+}
+
+/* Tombol Kapsul (Pill) */
+.pill-btn {
+border-radius: 9999px;
+border: 2px solid #0B0F17;
+box-shadow: 3px 3px 0px #0B0F17;
+transition: all 0.15s ease;
+}
+.pill-btn:hover {
+transform: translate(-1px, -1px);
+box-shadow: 4px 4px 0px #0B0F17;
+}
+.pill-btn:active {
+transform: translate(2px, 2px);
+box-shadow: 1px 1px 0px #0B0F17;
+}
+
+/* Pola Kotak Geometris Dekoratif */
+.mint-grid-pattern {
+background-color: #7BF1C7;
+background-image:
+linear-gradient(135deg, #22D3EE 25%, transparent 25%),
+linear-gradient(225deg, #22D3EE 25%, transparent 25%),
+linear-gradient(45deg, #22D3EE 25%, transparent 25%),
+linear-gradient(315deg, #22D3EE 25%, #7BF1C7 25%);
+background-position: 12px 0, 12px 0, 0 0, 0 0;
+background-size: 24px 24px;
+background-repeat: repeat;
+}
+
+/* Ticker / Pita Hitam Berjalan (Marquee) */
+@keyframes marqueeScroll {
+0% { transform: translateX(0%); }
+100% { transform: translateX(-50%); }
+}
+.marquee-track {
+display: flex;
+width: max-content;
+animation: marqueeScroll 24s linear infinite;
+}
+.marquee-track:hover {
+animation-play-state: paused;
+}
+
+/* Animasi garis laser pemindaian */
+@keyframes scanLine {
+0% { top: 4%; opacity: 0.2; }
+15% { opacity: 1; }
+50% { top: 92%; opacity: 1; }
+85% { opacity: 1; }
+100% { top: 4%; opacity: 0.2; }
+}
+
+.scan-laser {
+position: absolute;
+left: 0;
+right: 0;
+height: 4px;
+background: linear-gradient(90deg, transparent, #7BF1C7, #22D3EE, #FFFFFF, transparent);
+box-shadow: 0 0 18px 3px rgba(123, 241, 199, 0.95);
+animation: scanLine 2.2s ease-in-out infinite;
+z-index: 20;
+}
+
+/* Animasi transisi halus */
+@keyframes fadeInSlide {
+from {
+opacity: 0;
+transform: translateY(10px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.animate-fade-in {
+animation: fadeInSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Scrollbar halus */
+::-webkit-scrollbar {
+width: 7px;
+height: 7px;
+}
+::-webkit-scrollbar-track {
+background: #EAECEF;
+}
+::-webkit-scrollbar-thumb {
+background: #0B0F17;
+border-radius: 9999px;
+}
