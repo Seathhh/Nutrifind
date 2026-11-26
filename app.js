@@ -782,24 +782,30 @@ async function analyzeFoodImageWithSupabase(imageDataUrl, fallbackPreset) {
             headers["Authorization"] = `Bearer ${anonKey}`;
         }
 
-        const response = await fetch(scanUrl, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-                imageBase64,
-                base64Data: imageBase64,
-                mimeType
-            })
-        });
+        const modelsToTry = ["gemini-3-flash-preview", "gemini-3.8-flash"];
+        for (const modelName of modelsToTry) {
+            const response = await fetch(scanUrl, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                    imageBase64,
+                    base64Data: imageBase64,
+                    mimeType,
+                    model: modelName
+                })
+            });
 
-        const data = await response.json();
-        if (!response.ok) {
-            const rawErr = data?.error?.error?.message || data?.error?.message || data?.message || data?.error || data;
-            lastError = typeof rawErr === 'object' ? JSON.stringify(rawErr) : String(rawErr);
-        } else if (data && data.name) {
-            parsedResult = data;
-        } else {
-            lastError = "Format respons AI tidak valid: " + JSON.stringify(data);
+            const data = await response.json();
+            if (!response.ok) {
+                const rawErr = data?.error?.error?.message || data?.error?.message || data?.message || data?.error || data;
+                lastError = typeof rawErr === 'object' ? JSON.stringify(rawErr) : String(rawErr);
+                continue;
+            } else if (data && data.name) {
+                parsedResult = data;
+                break;
+            } else {
+                lastError = "Format respons AI tidak valid: " + JSON.stringify(data);
+            }
         }
     } catch (err) {
         lastError = err.message || "Gagal terhubung ke Supabase Edge Function.";
