@@ -4,11 +4,11 @@
 // =====================================================================
 
 window.NUTRIFIND_CONFIG = {
-    // 1. Endpoint Edge Function AI Scanner dari temanmu
+    // 1. Endpoint Edge Function AI Scanner
     SCAN_FUNCTION_URL: "https://ouqhentfvjebrvialsti.supabase.co/functions/v1/scan-food",
 
-    // 2. Tempel Supabase Anon / Publishable Key dari temanmu di sini:
-    SUPABASE_ANON_KEY: "TEMPEL_ANON_KEY_DARI_TEMANMU_DI_SINI",
+    // 2. Supabase Publishable / Anon Key (aman untuk publik)
+    SUPABASE_ANON_KEY: "sb_publishable_yFKyMT_mn78ZYJWkloma5A_rkRCyEJx",
 
     // 3. URL Project Supabase
     SUPABASE_URL: "https://ouqhentfvjebrvialsti.supabase.co"
