@@ -794,11 +794,12 @@ async function analyzeFoodImageWithSupabase(imageDataUrl, fallbackPreset) {
 
         const data = await response.json();
         if (!response.ok) {
-            lastError = data?.error?.message || data?.error || `HTTP ${response.status}`;
+            const rawErr = data?.error?.error?.message || data?.error?.message || data?.message || data?.error || data;
+            lastError = typeof rawErr === 'object' ? JSON.stringify(rawErr) : String(rawErr);
         } else if (data && data.name) {
             parsedResult = data;
         } else {
-            lastError = "Format respons AI tidak valid.";
+            lastError = "Format respons AI tidak valid: " + JSON.stringify(data);
         }
     } catch (err) {
         lastError = err.message || "Gagal terhubung ke Supabase Edge Function.";
