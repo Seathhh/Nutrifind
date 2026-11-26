@@ -791,7 +791,8 @@ async function analyzeFoodImageWithSupabase(imageDataUrl, fallbackPreset) {
                     imageBase64,
                     base64Data: imageBase64,
                     mimeType,
-                    model: modelName
+                    model: modelName,
+                    modelName: modelName
                 })
             });
 
