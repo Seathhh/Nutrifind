@@ -10,7 +10,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     
-    <!-- Memuat Tailwind CSS via CDN -->
+    <!-- Memuat Stylesheet Kustom NutriFind -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Memuat Supabase JS Client & Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         function applyTailwindConfig() {
@@ -21,18 +25,7 @@
                             fontFamily: {
                                 sans: ['"Plus Jakarta Sans"', 'sans-serif'],
                                 display: ['"Syne"', '"Fredoka"', 'sans-serif'],
-                                logo: ['"Fredoka"', 'sans-serif'],
-                            },
-                            colors: {
-                                nutri: {
-                                    mint: '#7BF1C7',
-                                    mintMid: '#34D399',
-                                    mintDark: '#10B981',
-                                    aqua: '#22D3EE',
-                                    aquaSoft: '#CFFAFE',
-                                    ink: '#0B0F17',
-                                    canvas: '#EAECEF',
-                                }
+                                poppy: ['"Fredoka"', 'sans-serif'],
                             }
                         }
                     }
@@ -42,122 +35,43 @@
         applyTailwindConfig();
         window.addEventListener('load', applyTailwindConfig);
     </script>
-
-    <!-- Stylesheet Kustom -->
-    <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #EAECEF;
-            color: #0B0F17;
-        }
-        h1, h2, h3, .font-poppy {
-            font-family: 'Syne', 'Fredoka', sans-serif;
-            letter-spacing: -0.02em;
-        }
-        .poppy-card {
-            background-color: #FFFFFF;
-            border: 2px solid #0B0F17;
-            box-shadow: 5px 5px 0px #0B0F17;
-            transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.2s ease;
-        }
-        .pill-btn {
-            border-radius: 9999px;
-            border: 2px solid #0B0F17;
-            box-shadow: 3px 3px 0px #0B0F17;
-            transition: all 0.15s ease;
-        }
-        .pill-btn:hover {
-            transform: translate(-1px, -1px);
-            box-shadow: 4px 4px 0px #0B0F17;
-        }
-        .pill-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0px #0B0F17;
-        }
-        .mint-grid-pattern {
-            background-color: #7BF1C7;
-            background-image: 
-                linear-gradient(135deg, #22D3EE 25%, transparent 25%), 
-                linear-gradient(225deg, #22D3EE 25%, transparent 25%), 
-                linear-gradient(45deg, #22D3EE 25%, transparent 25%), 
-                linear-gradient(315deg, #22D3EE 25%, #7BF1C7 25%);
-            background-position: 12px 0, 12px 0, 0 0, 0 0;
-            background-size: 24px 24px;
-            background-repeat: repeat;
-        }
-        @keyframes marqueeScroll {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
-        }
-        .marquee-track {
-            display: flex;
-            width: max-content;
-            white-space: nowrap;
-            animation: marqueeScroll 24s linear infinite;
-        }
-        @keyframes scanLine {
-            0% { top: 4%; opacity: 0.2; }
-            15% { opacity: 1; }
-            50% { top: 92%; opacity: 1; }
-            85% { opacity: 1; }
-            100% { top: 4%; opacity: 0.2; }
-        }
-        .scan-laser {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, #7BF1C7, #22D3EE, #FFFFFF, transparent);
-            box-shadow: 0 0 18px 3px rgba(123, 241, 199, 0.95);
-            animation: scanLine 2.2s ease-in-out infinite;
-            z-index: 20;
-        }
-        @keyframes fadeInSlide {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-            animation: fadeInSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-[#7BF1C7] selection:text-[#0B0F17]">
-    <!-- NOTIFIKASI TOAST GLOBAL -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+<body class="bg-[#EAECEF] text-[#0B0F17] min-h-screen flex flex-col selection:bg-[#7BF1C7] selection:text-[#0B0F17]">
+
+    <!-- Kontainer Notifikasi Toast -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
     <!-- ===================================================================== -->
-    <!-- 1. LAYAR AUTENTIKASI (LOGIN & DAFTAR AKUN)                            -->
+    <!-- 1. LAYAR AUTENTIKASI (LOGIN & REGISTER + SUPABASE STATUS)             -->
     <!-- ===================================================================== -->
-    <section id="auth-screen" class="min-h-screen flex flex-col justify-between bg-[#EAECEF] relative overflow-hidden">
+    <div id="auth-screen" class="min-h-screen flex flex-col justify-between bg-[#EAECEF] overflow-x-hidden">
         
-        <!-- Top Strip Hitam Editorial -->
-        <div class="bg-[#0B0F17] text-white py-3 px-5 flex items-center justify-between border-b-2 border-[#0B0F17]">
-            <div class="flex items-center gap-2">
+        <div class="w-full bg-[#0B0F17] text-white px-4 sm:px-8 py-2.5 flex items-center justify-between border-b-2 border-[#0B0F17]">
+            <div class="flex items-center gap-2.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-[#7BF1C7]"></span>
                 <span class="w-2.5 h-2.5 rounded-full bg-[#22D3EE]"></span>
-                <span class="text-[11px] font-extrabold uppercase tracking-widest text-slate-300 ml-1">NUTRIFIND AI VISION v2.6</span>
-                <span id="auth-db-badge" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#161E2E] border border-[#7BF1C7]/50 text-[10px] font-extrabold text-[#7BF1C7] ml-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-widest text-slate-300">NUTRIFIND AI • CLOUD VISION</span>
+                <span id="auth-db-badge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#161E2E] border border-[#7BF1C7]/50 text-[10px] font-extrabold text-[#7BF1C7]">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#7BF1C7] animate-pulse"></span>
-                    <span id="auth-db-status-text">MODE MEMORI LOKAL</span>
+                    <span id="auth-db-status-text">MENGHUBUNGKAN SUPABASE...</span>
                 </span>
             </div>
-            <div class="text-[11px] font-extrabold uppercase tracking-widest text-[#7BF1C7]">
-                SMART NUTRITION TRACKER
+            <div class="flex items-center gap-3">
+                <span class="hidden sm:inline text-[11px] font-extrabold uppercase tracking-widest text-[#7BF1C7]">
+                    SMART NUTRITION TRACKER
+                </span>
             </div>
         </div>
 
-        <!-- Konten Tengah Auth -->
         <div class="flex-1 flex items-center justify-center p-4 sm:p-8 relative">
-            <svg class="hidden md:block absolute top-12 left-12 w-24 h-24 text-[#7BF1C7] drop-shadow-[4px_4px_0px_#0B0F17] -rotate-12 select-none" viewBox="0 0 100 100" fill="currentColor">
+            <svg width="96" height="96" class="hidden md:block absolute top-12 left-12 w-24 h-24 text-[#7BF1C7] drop-shadow-[4px_4px_0px_#0B0F17] -rotate-12 select-none pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
                 <path d="M50 0 L61 24 L88 15 L77 40 L100 54 L75 65 L82 92 L56 79 L43 100 L35 74 L8 82 L22 57 L0 41 L26 33 L20 6 L44 21 Z" stroke="#0B0F17" stroke-width="3"/>
             </svg>
-            <svg class="hidden md:block absolute bottom-14 right-14 w-28 h-28 text-[#22D3EE] drop-shadow-[4px_4px_0px_#0B0F17] rotate-12 select-none" viewBox="0 0 100 100" fill="currentColor">
+            <svg width="112" height="112" class="hidden md:block absolute bottom-14 right-14 w-28 h-28 text-[#22D3EE] drop-shadow-[4px_4px_0px_#0B0F17] rotate-12 select-none pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
                 <path d="M50 2 C53 33 67 47 98 50 C67 53 53 67 50 98 C47 67 33 53 2 50 C33 47 47 33 50 2 Z" stroke="#0B0F17" stroke-width="3.5"/>
             </svg>
 
             <div class="relative z-10 w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 poppy-card rounded-3xl overflow-hidden bg-white">
-                <!-- Sisi Kiri -->
                 <div class="lg:col-span-6 bg-[#F8FAFC] p-7 sm:p-9 flex flex-col justify-between border-b-2 lg:border-b-0 lg:border-r-2 border-[#0B0F17] relative overflow-hidden">
                     <div class="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-[#22D3EE]/25 border-2 border-[#0B0F17] pointer-events-none"></div>
                     <div>
@@ -171,7 +85,7 @@
                             Foto hidanganmu, biarkan AI mendeteksi kalori, makronutrisi, <b>% Daily Value mikronutrisi</b>, hingga progres target berat badan harianmu.
                         </p>
                     </div>
-                    <div class="mt-8 relative z-10 space-y-2.5">
+                    <div class="mt-8 relative z-10 flex flex-col items-start gap-2.5">
                         <div class="inline-flex items-center gap-2.5 bg-white px-4 py-2.5 rounded-full border-2 border-[#0B0F17] shadow-[3px_3px_0px_#0B0F17]">
                             <span class="w-3 h-3 rounded-full bg-[#7BF1C7] border border-[#0B0F17]"></span>
                             <span class="text-xs font-extrabold uppercase text-[#0B0F17]">AI Vision + % Daily Value AKG</span>
@@ -183,48 +97,45 @@
                     </div>
                 </div>
 
-                <!-- Sisi Kanan: Logo & Form Login -->
-                <div class="lg:col-span-6 flex flex-col">
-                    <div class="bg-[#0B0F17] p-6 text-white text-center border-b-2 border-[#0B0F17]">
-                        <div class="flex justify-center">
-                            <svg class="h-14 w-auto overflow-visible" viewBox="0 0 286 84" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="NutriFind Logo">
-                                <g font-family="'Fredoka', sans-serif" font-weight="700" font-size="47">
-                                    <text x="11" y="61" fill="#10B981" transform="rotate(-4 24 46)">N</text>
-                                    <text x="41" y="65" fill="#10B981" transform="rotate(3 54 50)">U</text>
-                                    <text x="70" y="60" fill="#10B981" transform="rotate(-3 82 45)">T</text>
-                                    <text x="95" y="63" fill="#10B981" transform="rotate(4 108 48)">R</text>
-                                    <text x="8" y="58" fill="#7BF1C7" transform="rotate(-4 24 46)">N</text>
-                                    <text x="38" y="62" fill="#7BF1C7" transform="rotate(3 54 50)">U</text>
-                                    <text x="67" y="57" fill="#7BF1C7" transform="rotate(-3 82 45)">T</text>
-                                    <text x="92" y="60" fill="#7BF1C7" transform="rotate(4 108 48)">R</text>
-                                </g>
-                                <g transform="translate(126, 14) rotate(-8 11 26)">
-                                    <path d="M11 3 C8 3 6 5 7 8 L9 14 C5 21 2 31 4 40 C6 47 12 50 17 49 C22 48 25 42 24 34 C23 26 18 18 15 13 L17 7 C18 4 15 2 13 4 C12 3 11.5 3 11 3 Z" fill="#10B981"/>
-                                </g>
-                                <g transform="translate(123, 11) rotate(-8 11 26)">
-                                    <path d="M11 3 C8 3 6 5 7 8 L9 14 C5 21 2 31 4 40 C6 47 12 50 17 49 C22 48 25 42 24 34 C23 26 18 18 15 13 L17 7 C18 4 15 2 13 4 C12 3 11.5 3 11 3 Z" fill="#7BF1C7"/>
-                                </g>
-                                <g font-family="'Fredoka', sans-serif" font-weight="700" font-size="47">
-                                    <text x="150" y="61" fill="#22D3EE" transform="rotate(3 162 46)">F</text>
-                                    <text x="176" y="64" fill="#22D3EE" transform="rotate(-3 183 49)">I</text>
-                                    <text x="192" y="60" fill="#22D3EE" transform="rotate(4 207 45)">N</text>
-                                    <text x="225" y="63" fill="#22D3EE" transform="rotate(-3 240 48)">D</text>
-                                    <text x="147" y="58" fill="#FFFFFF" transform="rotate(3 162 46)">F</text>
-                                    <text x="173" y="61" fill="#FFFFFF" transform="rotate(-3 183 49)">I</text>
-                                    <text x="189" y="57" fill="#FFFFFF" transform="rotate(4 207 45)">N</text>
-                                    <text x="222" y="60" fill="#FFFFFF" transform="rotate(-3 240 48)">D</text>
-                                </g>
-                                <g transform="translate(174, 3)">
-                                    <path d="M4 21 C5 10 15 5 27 4 C25 15 17 22 4 21 Z" fill="#22D3EE"/>
-                                    <path d="M2 19 C3 8 13 3 25 2 C23 13 15 20 2 19 Z" fill="#FFFFFF"/>
-                                    <path d="M4 18 Q13 11 22 4" stroke="#22D3EE" stroke-width="1.8" stroke-linecap="round"/>
-                                </g>
-                            </svg>
-                        </div>
+                <div class="lg:col-span-6 bg-white flex flex-col">
+                    <div class="bg-[#0B0F17] px-6 py-5 text-center border-b-2 border-[#0B0F17]">
+                        <svg width="200" height="58" class="h-14 w-auto mx-auto overflow-visible" viewBox="0 0 286 84" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="NutriFind">
+                            <g font-family="'Fredoka', sans-serif" font-weight="700" font-size="47">
+                                <text x="11" y="61" fill="#10B981" transform="rotate(-4 24 46)">N</text>
+                                <text x="41" y="65" fill="#10B981" transform="rotate(3 54 50)">U</text>
+                                <text x="70" y="60" fill="#10B981" transform="rotate(-3 82 45)">T</text>
+                                <text x="95" y="63" fill="#10B981" transform="rotate(4 108 48)">R</text>
+                                <text x="8" y="58" fill="#7BF1C7" transform="rotate(-4 24 46)">N</text>
+                                <text x="38" y="62" fill="#7BF1C7" transform="rotate(3 54 50)">U</text>
+                                <text x="67" y="57" fill="#7BF1C7" transform="rotate(-3 82 45)">T</text>
+                                <text x="92" y="60" fill="#7BF1C7" transform="rotate(4 108 48)">R</text>
+                            </g>
+                            <g transform="translate(126, 14) rotate(-8 11 26)">
+                                <path d="M11 3 C8 3 6 5 7 8 L9 14 C5 21 2 31 4 40 C6 47 12 50 17 49 C22 48 25 42 24 34 C23 26 18 18 15 13 L17 7 C18 4 15 2 13 4 C12 3 11.5 3 11 3 Z" fill="#10B981"/>
+                            </g>
+                            <g transform="translate(123, 11) rotate(-8 11 26)">
+                                <path d="M11 3 C8 3 6 5 7 8 L9 14 C5 21 2 31 4 40 C6 47 12 50 17 49 C22 48 25 42 24 34 C23 26 18 18 15 13 L17 7 C18 4 15 2 13 4 C12 3 11.5 3 11 3 Z" fill="#7BF1C7"/>
+                            </g>
+                            <g font-family="'Fredoka', sans-serif" font-weight="700" font-size="47">
+                                <text x="150" y="61" fill="#22D3EE" transform="rotate(3 162 46)">F</text>
+                                <text x="176" y="64" fill="#22D3EE" transform="rotate(-3 183 49)">I</text>
+                                <text x="192" y="60" fill="#22D3EE" transform="rotate(4 207 45)">N</text>
+                                <text x="225" y="63" fill="#22D3EE" transform="rotate(-3 240 48)">D</text>
+                                <text x="147" y="58" fill="#FFFFFF" transform="rotate(3 162 46)">F</text>
+                                <text x="173" y="61" fill="#FFFFFF" transform="rotate(-3 183 49)">I</text>
+                                <text x="189" y="57" fill="#FFFFFF" transform="rotate(4 207 45)">N</text>
+                                <text x="222" y="60" fill="#FFFFFF" transform="rotate(-3 240 48)">D</text>
+                            </g>
+                            <g transform="translate(174, 3)">
+                                <path d="M4 21 C5 10 15 5 27 4 C25 15 17 22 4 21 Z" fill="#22D3EE"/>
+                                <path d="M2 19 C3 8 13 3 25 2 C23 13 15 20 2 19 Z" fill="#FFFFFF"/>
+                                <path d="M4 18 Q13 11 22 4" stroke="#22D3EE" stroke-width="1.8" stroke-linecap="round"/>
+                            </g>
+                        </svg>
                     </div>
 
-                    <div class="p-6 sm:p-7 bg-white flex-1">
-                        <div class="grid grid-cols-2 bg-[#EAECEF] p-1 rounded-full mb-5 border-2 border-[#0B0F17]">
+                    <div class="p-6 sm:p-7 flex-1 flex flex-col justify-center">
+                        <div class="grid grid-cols-2 gap-1.5 p-1.5 bg-[#EAECEF] border-2 border-[#0B0F17] rounded-full mb-5">
                             <button type="button" id="tab-login-btn" onclick="switchAuthTab('login')" class="py-2 text-xs font-extrabold uppercase tracking-wider rounded-full bg-[#7BF1C7] text-[#0B0F17] border-2 border-[#0B0F17] transition-all">
                                 Masuk (Login)
                             </button>
@@ -233,174 +144,159 @@
                             </button>
                         </div>
 
-                        <div id="auth-error" class="hidden mb-4 p-3 rounded-2xl bg-rose-100 border-2 border-[#0B0F17] text-rose-900 text-xs font-bold flex items-center gap-2">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span id="auth-error-text">Email atau kata sandi salah.</span>
+                        <div id="auth-error" class="hidden mb-4 p-3 rounded-2xl bg-rose-100 border-2 border-[#0B0F17] text-[#0B0F17] text-xs font-bold flex items-center gap-2">
+                            <span>⚠️</span>
+                            <span id="auth-error-text">Email atau password tidak valid.</span>
                         </div>
 
                         <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-3.5">
                             <div id="register-name-group" class="hidden">
-                                <label class="block text-[11px] font-extrabold text-[#0B0F17] uppercase tracking-wider mb-1">Nama Lengkap</label>
-                                <input type="text" id="auth-name" placeholder="Contoh: Budi Santoso" class="w-full px-4 py-2.5 rounded-2xl border-2 border-[#0B0F17] focus:bg-[#F0FDF4] outline-none text-sm font-semibold transition-all">
+                                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B0F17] mb-1">Nama Lengkap</label>
+                                <input type="text" id="auth-name" placeholder="Contoh: Raka Pratama" class="w-full px-4 py-2.5 rounded-full border-2 border-[#0B0F17] bg-white focus:bg-[#F8FAFC] outline-none text-sm font-semibold">
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-extrabold text-[#0B0F17] uppercase tracking-wider mb-1">Alamat Email</label>
-                                <input type="email" id="auth-email" required placeholder="nama@email.com" class="w-full px-4 py-2.5 rounded-2xl border-2 border-[#0B0F17] focus:bg-[#F0FDF4] outline-none text-sm font-semibold transition-all">
+                                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B0F17] mb-1">Alamat Email</label>
+                                <input type="email" id="auth-email" required placeholder="nama@email.com" class="w-full px-4 py-2.5 rounded-full border-2 border-[#0B0F17] bg-white focus:bg-[#F8FAFC] outline-none text-sm font-semibold">
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-extrabold text-[#0B0F17] uppercase tracking-wider mb-1">Kata Sandi</label>
+                                <label class="block text-[11px] font-extrabold uppercase tracking-wider text-[#0B0F17] mb-1">Kata Sandi</label>
                                 <div class="relative">
-                                    <input type="password" id="auth-password" required minlength="4" placeholder="Minimal 4 karakter" class="w-full px-4 py-2.5 pr-11 rounded-2xl border-2 border-[#0B0F17] focus:bg-[#F0FDF4] outline-none text-sm font-semibold transition-all">
-                                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-[#0B0F17] p-1" title="Lihat/Sembunyikan Sandi">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                        </svg>
+                                    <input type="password" id="auth-password" required minlength="4" placeholder="Minimal 4 karakter" class="w-full px-4 py-2.5 rounded-full border-2 border-[#0B0F17] bg-white focus:bg-[#F8FAFC] outline-none text-sm font-semibold pr-11">
+                                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-[#0B0F17]" title="Tampilkan/Sembunyikan Sandi">
+                                        <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                     </button>
                                 </div>
                             </div>
 
-                            <button type="submit" id="auth-submit-btn" class="w-full py-3 px-5 bg-[#7BF1C7] hover:bg-[#34D399] text-[#0B0F17] font-extrabold uppercase tracking-wider pill-btn text-xs sm:text-sm">
+                            <button type="submit" id="auth-submit-btn" class="w-full py-3 px-5 bg-[#7BF1C7] hover:bg-[#34D399] text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn mt-1">
                                 SIAP MULAI? MASUK SEKARANG! →
                             </button>
                         </form>
 
-                        <div class="relative my-5">
-                            <div class="absolute inset-0 flex items-center">
-                                <div class="w-full border-t-2 border-[#0B0F17]/15"></div>
-                            </div>
-                            <div class="relative flex justify-center text-[10px]">
-                                <span class="px-3 bg-white text-[#0B0F17] font-extrabold uppercase tracking-widest">ATAU COBA INSTAN</span>
-                            </div>
+                        <div class="relative my-4">
+                            <div class="absolute inset-0 flex items-center"><div class="w-full border-t-2 border-[#0B0F17]/15"></div></div>
+                            <div class="relative flex justify-center text-[10px]"><span class="px-3 bg-white text-slate-500 font-extrabold uppercase tracking-widest">Atau Coba Instan</span></div>
                         </div>
 
-                        <button type="button" onclick="loginWithDemoAccount()" class="w-full py-3 px-5 bg-[#22D3EE] hover:bg-[#06B6D4] text-[#0B0F17] font-extrabold uppercase tracking-wider pill-btn text-xs flex items-center justify-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-white border border-[#0B0F17] animate-ping"></span>
-                            MASUK DENGAN AKUN DEMO
+                        <button type="button" onclick="loginWithDemoAccount()" class="w-full py-2.5 px-4 bg-[#22D3EE] hover:bg-[#06B6D4] text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs flex items-center justify-center gap-2 pill-btn">
+                            <span class="w-2.5 h-2.5 rounded-full bg-white border border-[#0B0F17]"></span>
+                            Masuk dengan Akun Demo
                         </button>
-                        <p class="text-[11px] text-center text-slate-500 mt-2.5 font-semibold">
-                            Demo: <span class="font-mono font-bold text-[#0B0F17]">demo@nutrifind.id</span> • <span class="font-mono font-bold text-[#0B0F17]">demo123</span>
-                        </p>
+                        <p class="text-[11px] text-center text-slate-500 font-semibold mt-2.5">Demo: <code class="text-[#0B0F17] font-extrabold">demo@nutrifind.id</code> • <code class="text-[#0B0F17] font-extrabold">demo123</code></p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pita Marquee Hitam Bawah -->
-        <div class="bg-[#0B0F17] text-white py-2.5 overflow-hidden border-t-2 border-[#0B0F17]">
+        <div class="w-full bg-[#0B0F17] text-white py-2.5 overflow-hidden border-t-2 border-[#0B0F17]">
             <div class="marquee-track text-[11px] font-extrabold uppercase tracking-widest">
-                <span class="mx-4 text-[#7BF1C7]">✦ SCAN MAKANAN INSTAN DENGAN AI</span>
-                <span class="mx-4 text-white">•</span>
-                <span class="mx-4 text-[#22D3EE]">CEK MIKRONUTRISI & % DAILY VALUE</span>
-                <span class="mx-4 text-white">•</span>
-                <span class="mx-4 text-[#7BF1C7]">KALKULATOR BMI & TARGET KALORI</span>
-                <span class="mx-4 text-white">•</span>
-                <span class="mx-4 text-[#22D3EE]">GRAFIK BERAT BADAN & KALENDER GIZI</span>
-                <span class="mx-4 text-white">•</span>
-                <span class="mx-4 text-[#7BF1C7]">✦ SCAN MAKANAN INSTAN DENGAN AI</span>
-                <span class="mx-4 text-white">•</span>
-                <span class="mx-4 text-[#22D3EE]">CEK MIKRONUTRISI & % DAILY VALUE</span>
-                <span class="mx-4 text-white">•</span>
-                <span class="mx-4 text-[#7BF1C7]">KALKULATOR BMI & TARGET KALORI</span>
-                <span class="mx-4 text-white">•</span>
-                <span class="mx-4 text-[#22D3EE]">GRAFIK BERAT BADAN & KALENDER GIZI</span>
-                <span class="mx-4 text-white">•</span>
+                <span class="mx-6 text-[#7BF1C7]">✦ SCAN MAKANAN INSTAN DENGAN AI</span>
+                <span class="mx-6 text-white">•</span>
+                <span class="mx-6 text-[#22D3EE]">CEK MIKRONUTRISI & % DAILY VALUE</span>
+                <span class="mx-6 text-white">•</span>
+                <span class="mx-6 text-[#7BF1C7]">KALKULATOR BMI & TARGET KALORI</span>
+                <span class="mx-6 text-white">•</span>
+                <span class="mx-6 text-[#22D3EE]">GRAFIK BERAT BADAN & KALENDER GIZI</span>
+                <span class="mx-6 text-white">•</span>
+                <span class="mx-6 text-[#7BF1C7]">✦ SCAN MAKANAN INSTAN DENGAN AI</span>
+                <span class="mx-6 text-white">•</span>
+                <span class="mx-6 text-[#22D3EE]">CEK MIKRONUTRISI & % DAILY VALUE</span>
+                <span class="mx-6 text-white">•</span>
+                <span class="mx-6 text-[#7BF1C7]">KALKULATOR BMI & TARGET KALORI</span>
+                <span class="mx-6 text-white">•</span>
+                <span class="mx-6 text-[#22D3EE]">GRAFIK BERAT BADAN & KALENDER GIZI</span>
+                <span class="mx-6 text-white">•</span>
             </div>
         </div>
-    </section>
+    </div>
 
     <!-- ===================================================================== -->
     <!-- 2. MODAL KALKULATOR BMI & TARGET KALORI (OPSIONAL / BISA DI-SKIP)     -->
     <!-- ===================================================================== -->
     <div id="bmi-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-[#0B0F17]/75 backdrop-blur-sm">
-        <div class="poppy-card rounded-3xl w-full max-w-lg overflow-hidden bg-white flex flex-col max-h-[92vh] animate-fade-in">
-            <div class="bg-[#0B0F17] text-white px-6 py-4 flex items-center justify-between border-b-2 border-[#0B0F17] shrink-0">
+        <div class="poppy-card rounded-3xl w-full max-w-lg overflow-hidden bg-white animate-fade-in">
+            <div class="bg-[#0B0F17] text-white px-6 py-4 flex items-center justify-between border-b-2 border-[#0B0F17]">
                 <div>
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#7BF1C7]">OPSIONAL • BISA DI-SKIP</span>
-                    <h3 class="text-lg sm:text-xl font-extrabold uppercase tracking-tight">KALKULATOR BMI & KALORI</h3>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#7BF1C7]">PERSONALISASI TARGET GIZI</span>
+                    <h3 class="text-lg font-extrabold uppercase tracking-tight">KALKULATOR BMI & KALORI</h3>
                 </div>
-                <button type="button" onclick="skipOrCloseBmiModal()" class="p-1.5 rounded-full bg-[#161E2E] hover:bg-slate-700 text-slate-300 hover:text-white transition-colors" title="Tutup">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <button type="button" onclick="skipOrCloseBmiModal()" class="p-1.5 rounded-full bg-[#161E2E] text-slate-300 hover:text-white" title="Tutup">✕</button>
             </div>
 
-            <div class="p-5 sm:p-6 space-y-4 overflow-y-auto">
-                <p class="text-xs text-slate-600 font-medium leading-relaxed">
-                    Hitung Indeks Massa Tubuh (BMI) dan kebutuhan kalori harian otomatis, atau klik <b>Lewati</b> untuk memakai target standar <b>2.000 kkal/hari</b>.
-                </p>
-
+            <div class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-extrabold text-[#0F172A] mb-1">Jenis Kelamin</label>
-                        <select id="bmi-gender" onchange="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#0F172A] text-sm font-semibold outline-none bg-white">
+                        <label class="block text-[11px] font-extrabold uppercase text-[#0B0F17] mb-1">Jenis Kelamin</label>
+                        <select id="bmi-gender" onchange="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#0B0F17] text-xs font-extrabold bg-white outline-none">
                             <option value="male">Laki-laki</option>
                             <option value="female">Perempuan</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-extrabold text-[#0F172A] mb-1">Usia (Tahun)</label>
-                        <input type="number" id="bmi-age" value="25" min="12" max="100" oninput="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#0F172A] text-sm font-semibold outline-none">
+                        <label class="block text-[11px] font-extrabold uppercase text-[#0B0F17] mb-1">Usia (Tahun)</label>
+                        <input type="number" id="bmi-age" value="25" min="12" max="90" oninput="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#0B0F17] text-xs font-extrabold outline-none">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-3 gap-2.5">
                     <div>
-                        <label class="block text-xs font-extrabold text-[#0F172A] mb-1">Tinggi (cm)</label>
-                        <input type="number" id="bmi-height" value="170" min="100" max="240" oninput="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#0F172A] text-sm font-semibold outline-none">
+                        <label class="block text-[10px] font-extrabold uppercase text-[#0B0F17] mb-1">Tinggi (cm)</label>
+                        <input type="number" id="bmi-height" value="170" min="100" max="230" oninput="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#0B0F17] text-xs font-extrabold outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-extrabold text-[#0F172A] mb-1">Berat (kg)</label>
-                        <input type="number" id="bmi-weight" value="68" min="25" max="250" step="0.1" oninput="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#0F172A] text-sm font-semibold outline-none">
+                        <label class="block text-[10px] font-extrabold uppercase text-[#0B0F17] mb-1">Berat (kg)</label>
+                        <input type="number" id="bmi-weight" value="65" step="0.1" min="30" max="250" oninput="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#0B0F17] text-xs font-extrabold outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-extrabold text-[#0F172A] mb-1">Target (kg)</label>
-                        <input type="number" id="bmi-target-weight" value="63" min="25" max="250" step="0.1" oninput="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#0F172A] text-sm font-semibold outline-none">
+                        <label class="block text-[10px] font-extrabold uppercase text-[#0B0F17] mb-1">Target (kg)</label>
+                        <input type="number" id="bmi-target-weight" value="62" step="0.1" min="30" max="250" oninput="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#0B0F17] text-xs font-extrabold outline-none">
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-extrabold text-[#0F172A] mb-1">Tingkat Aktivitas Harian</label>
-                    <select id="bmi-activity" onchange="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#0F172A] text-sm font-semibold outline-none bg-white">
-                        <option value="1.2">Jarang Olahraga (Kerja Meja)</option>
-                        <option value="1.375" selected>Aktivitas Ringan (1–3x/minggu)</option>
-                        <option value="1.55">Aktivitas Sedang (3–5x/minggu)</option>
-                        <option value="1.725">Sangat Aktif (6–7x/minggu)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-extrabold text-[#0F172A] mb-1">Tujuan Utama</label>
-                    <select id="bmi-goal" onchange="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#0F172A] text-sm font-semibold outline-none bg-white">
-                        <option value="lose">Turunkan Berat Badan (Defisit Kalori -400 kkal)</option>
-                        <option value="maintain">Pertahankan Berat Badan Ideal</option>
-                        <option value="gain">Naikkan Massa Otot / Berat (+350 kkal)</option>
-                    </select>
-                </div>
-
-                <div class="p-4 rounded-2xl bg-[#ECFDF5] border-2 border-[#0F172A] flex items-center justify-between gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <p class="text-xs text-[#0F172A] font-bold">Skor BMI Anda</p>
-                        <div class="flex items-baseline gap-2 mt-0.5">
-                            <span id="preview-bmi-score" class="text-2xl font-poppy font-bold text-[#0F172A]">23.5</span>
-                            <span id="preview-bmi-badge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-[#6EE7B7] text-[#0F172A] border border-[#0F172A]">Normal</span>
+                        <label class="block text-[11px] font-extrabold uppercase text-[#0B0F17] mb-1">Tingkat Aktivitas</label>
+                        <select id="bmi-activity" onchange="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#0B0F17] text-xs font-extrabold bg-white outline-none">
+                            <option value="1.2">Jarang Olahraga (Sedentari)</option>
+                            <option value="1.375" selected>Ringan (1–3x / minggu)</option>
+                            <option value="1.55">Sedang (3–5x / minggu)</option>
+                            <option value="1.725">Aktif (6–7x / minggu)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-extrabold uppercase text-[#0B0F17] mb-1">Tujuan Utama</label>
+                        <select id="bmi-goal" onchange="recalculateBmiPreview()" class="w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#0B0F17] text-xs font-extrabold bg-white outline-none">
+                            <option value="lose">Turunkan Berat Badan</option>
+                            <option value="maintain" selected>Pertahankan Berat Ideal</option>
+                            <option value="gain">Naikkan Massa Otot</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-[#ECFDF5] border-2 border-[#0B0F17] flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">SKOR BMI ANDA</p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span id="preview-bmi-score" class="text-2xl font-extrabold text-[#0B0F17]">22.5</span>
+                            <span id="preview-bmi-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Normal</span>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-xs text-[#0F172A] font-bold">Rekomendasi Target</p>
-                        <p class="text-2xl font-poppy font-bold text-[#10B981] mt-0.5"><span id="preview-kcal-target">1.850</span> <span class="text-xs font-sans font-bold text-[#0F172A]">kkal/hari</span></p>
+                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">REKOMENDASI KALORI</p>
+                        <p class="text-2xl font-extrabold text-[#10B981] mt-0.5"><span id="preview-kcal-target">2.000</span> <span class="text-xs text-[#0B0F17]">kkal</span></p>
                     </div>
                 </div>
-            </div>
 
-            <div class="p-5 bg-[#EAECEF] border-t-2 border-[#0B0F17] flex flex-col sm:flex-row gap-2.5 shrink-0">
-                <button type="button" onclick="skipOrCloseBmiModal()" class="w-full sm:w-auto px-5 py-3 bg-white hover:bg-slate-100 text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn">
-                    LEWATI (2.000 KKAL)
-                </button>
-                <button type="button" onclick="saveBmiProfile()" class="flex-1 py-3 px-5 bg-[#7BF1C7] hover:bg-[#34D399] text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn">
-                    TERAPKAN TARGET KALORI INI ✨
-                </button>
+                <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
+                    <button type="button" onclick="skipOrCloseBmiModal()" class="py-2.5 px-4 bg-[#EAECEF] hover:bg-slate-300 text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn">
+                        LEWATI (SKIP)
+                    </button>
+                    <button type="button" onclick="saveBmiProfile()" class="flex-1 py-2.5 px-5 bg-[#7BF1C7] hover:bg-[#34D399] text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn">
+                        TERAPKAN TARGET KALORI ✨
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -410,12 +306,11 @@
     <!-- ===================================================================== -->
     <div id="main-app" class="hidden flex-1 flex flex-col">
         
-        <!-- HEADER HITAM TEGAS DENGAN LOGO NUTRIFIND -->
         <header class="bg-[#0B0F17] text-white border-b-2 border-[#0B0F17] sticky top-0 z-30">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-3.5">
                     <a href="#top" onclick="switchMainView('scanner'); return false;" class="flex items-center group focus:outline-none" title="NutriFind Beranda">
-                        <svg class="h-11 sm:h-12 w-auto overflow-visible transition-transform group-hover:scale-105" viewBox="0 0 286 84" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="NutriFind">
+                        <svg width="160" height="46" class="h-11 sm:h-12 w-auto overflow-visible transition-transform group-hover:scale-105" viewBox="0 0 286 84" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="NutriFind">
                             <g font-family="'Fredoka', sans-serif" font-weight="700" font-size="47">
                                 <text x="11" y="61" fill="#10B981" transform="rotate(-4 24 46)">N</text>
                                 <text x="41" y="65" fill="#10B981" transform="rotate(3 54 50)">U</text>
@@ -456,7 +351,6 @@
                     </div>
                 </div>
 
-                <!-- Ringkasan Kalori & Tombol Keluar -->
                 <div class="flex items-center gap-2 sm:gap-2.5">
                     <button type="button" onclick="openBmiModal()" class="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#161E2E] hover:bg-[#1E293B] border-2 border-[#7BF1C7] text-left transition-all" title="Atur BMI & Target Kalori">
                         <div>
@@ -471,40 +365,37 @@
                                 <span class="text-[10px] font-bold text-slate-300 uppercase">kkal</span>
                             </div>
                         </div>
-                        <svg class="w-4 h-4 text-[#22D3EE]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <svg width="16" height="16" class="w-4 h-4 text-[#22D3EE]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     </button>
 
                     <button type="button" onclick="handleLogout()" class="p-2.5 rounded-full bg-[#161E2E] hover:bg-rose-500/20 text-white border-2 border-slate-700 hover:border-rose-400 transition-colors" title="Keluar Akun">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     </button>
                 </div>
             </div>
 
-            <!-- Bar Progres Kalori Harian -->
             <div class="w-full h-2 bg-[#161E2E] overflow-hidden">
                 <div id="header-cal-bar" class="h-full bg-gradient-to-r from-[#7BF1C7] to-[#22D3EE] transition-all duration-500" style="width: 0%"></div>
             </div>
 
-            <!-- NAVIGASI TAB KAPSUL -->
             <div class="bg-[#F8FAFC] border-t border-slate-300">
                 <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex gap-2.5 overflow-x-auto">
                     <button type="button" id="nav-tab-scanner" onclick="switchMainView('scanner')" class="nav-tab-btn px-5 py-2 rounded-full text-xs font-extrabold uppercase tracking-wider bg-[#7BF1C7] text-[#0B0F17] border-2 border-[#0B0F17] shadow-[3px_3px_0px_#0B0F17] flex items-center gap-2 whitespace-nowrap transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                        <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                         SCANNER & MIKRONUTRISI
                     </button>
                     <button type="button" id="nav-tab-weight" onclick="switchMainView('weight')" class="nav-tab-btn px-5 py-2 rounded-full text-xs font-extrabold uppercase tracking-wider bg-white text-[#0B0F17] border-2 border-transparent hover:border-[#0B0F17] flex items-center gap-2 whitespace-nowrap transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                         BERAT BADAN & TARGET
                     </button>
                     <button type="button" id="nav-tab-calendar" onclick="switchMainView('calendar')" class="nav-tab-btn px-5 py-2 rounded-full text-xs font-extrabold uppercase tracking-wider bg-white text-[#0B0F17] border-2 border-transparent hover:border-[#0B0F17] flex items-center gap-2 whitespace-nowrap transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         KALENDER GIZI
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- KONTEN UTAMA -->
         <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">
 
             <!-- VIEW A: SCANNER MAKANAN, MIKRONUTRISI & LOG HARIAN -->
@@ -542,22 +433,22 @@
                                 <h2 class="font-extrabold uppercase text-[#0B0F17] text-xl">PINDAI MAKANAN</h2>
                             </div>
 
-                            <div id="dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" class="relative w-full aspect-[4/3] rounded-2xl bg-[#F8FAFC] border-2 border-dashed border-[#0B0F17] overflow-hidden flex flex-col items-center justify-center text-center transition-all group">
+                            <div id="dropzone" onclick="if(!appState.cameraStream) document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" class="scanner-frame rounded-2xl bg-[#F8FAFC] border-2 border-dashed border-[#0B0F17] flex flex-col items-center justify-center text-center transition-all group cursor-pointer">
                                 <div id="scanner-placeholder" class="p-6 flex flex-col items-center">
                                     <div class="w-16 h-16 rounded-full bg-[#7BF1C7] border-2 border-[#0B0F17] shadow-[3px_3px_0px_#22D3EE] flex items-center justify-center text-[#0B0F17] mb-3 group-hover:scale-105 transition-transform">
-                                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <svg width="28" height="28" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     </div>
-                                    <p class="text-xs font-extrabold uppercase text-[#0B0F17]">SERET FOTO MAKANAN KE SINI</p>
+                                    <p class="text-xs font-extrabold uppercase text-[#0B0F17]">SERET / KLIK FOTO MAKANAN</p>
                                     <p class="text-xs text-slate-500 font-medium mt-1">atau unggah foto / buka kamera</p>
                                 </div>
 
-                                <img id="food-preview-img" class="hidden w-full h-full object-cover" alt="Preview Makanan">
-                                <video id="camera-video" autoplay playsinline class="hidden w-full h-full object-cover"></video>
+                                <img id="food-preview-img" class="hidden" alt="Preview Makanan">
+                                <video id="camera-video" autoplay playsinline muted class="hidden"></video>
 
                                 <div id="scanning-overlay" class="hidden absolute inset-0 bg-[#0B0F17]/70 backdrop-blur-[2px] flex flex-col items-center justify-center text-white z-10">
                                     <div class="scan-laser"></div>
                                     <div class="px-5 py-2 rounded-full bg-[#7BF1C7] text-[#0B0F17] border-2 border-[#0B0F17] flex items-center gap-2.5 shadow-lg">
-                                        <svg class="w-4 h-4 text-[#0B0F17] animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <svg width="16" height="16" class="w-4 h-4 text-[#0B0F17] animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                         <span class="text-xs font-extrabold uppercase tracking-wider">MENGANALISIS GIZI...</span>
                                     </div>
                                 </div>
@@ -568,11 +459,11 @@
 
                             <div id="default-scan-controls" class="grid grid-cols-2 gap-3 mt-4">
                                 <button type="button" onclick="document.getElementById('file-input').click()" class="py-3 px-4 bg-[#7BF1C7] hover:bg-[#34D399] text-[#0B0F17] font-extrabold uppercase tracking-wider text-[11px] sm:text-xs flex items-center justify-center gap-1.5 pill-btn">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                     UNGGAH FOTO
                                 </button>
                                 <button type="button" onclick="startCamera()" class="py-3 px-4 bg-[#22D3EE] hover:bg-[#06B6D4] text-[#0B0F17] font-extrabold uppercase tracking-wider text-[11px] sm:text-xs flex items-center justify-center gap-1.5 pill-btn">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                    <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                                     BUKA KAMERA
                                 </button>
                             </div>
@@ -584,6 +475,12 @@
                                 <button type="button" onclick="stopCamera()" class="py-3 px-4 bg-rose-200 text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn">
                                     BATAL
                                 </button>
+                            </div>
+
+                            <!-- Kotak Peringatan API Error -->
+                            <div id="api-error-banner" class="hidden mt-4 p-3.5 rounded-2xl bg-amber-100 border-2 border-[#0B0F17] text-xs space-y-1.5">
+                                <p class="font-extrabold text-[#0B0F17]">⚠️ Gagal Menghubungi Server AI Scanner:</p>
+                                <p id="api-error-detail" class="text-slate-700 font-medium leading-relaxed"></p>
                             </div>
 
                             <div class="mt-5 pt-4 border-t-2 border-[#0B0F17]/15">
@@ -711,7 +608,7 @@
 
                                 <div class="pt-2 flex justify-end">
                                     <button type="button" id="btn-save-food" onclick="saveCurrentScanToLog()" class="w-full sm:w-auto px-6 py-3 bg-[#7BF1C7] hover:bg-[#34D399] text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn flex items-center justify-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                        <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                                         CATAT KE RIWAYAT KONSUMSI ✨
                                     </button>
                                 </div>
@@ -830,13 +727,13 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <button type="button" onclick="changeCalendarMonth(-1)" class="p-2 rounded-xl bg-white border-2 border-[#0F172A] text-[#0F172A]" title="Bulan Sebelumnya">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                                    <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
                                 </button>
                                 <button type="button" onclick="jumpCalendarToToday()" class="px-3 py-1.5 rounded-xl bg-[#6EE7B7] border-2 border-[#0F172A] text-xs font-extrabold text-[#0F172A]">
                                     Hari Ini
                                 </button>
                                 <button type="button" onclick="changeCalendarMonth(1)" class="p-2 rounded-xl bg-white border-2 border-[#0F172A] text-[#0F172A]" title="Bulan Berikutnya">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                                    <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                                 </button>
                             </div>
                         </div>
@@ -911,7 +808,7 @@
 
                         <div class="mt-5 pt-4 border-t-2 border-[#0B0F17]/15">
                             <button type="button" onclick="scanForSelectedCalendarDate()" class="w-full py-3 px-4 bg-[#22D3EE] hover:bg-[#06B6D4] text-[#0B0F17] font-extrabold uppercase tracking-wider text-xs pill-btn flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                                 TAMBAH / PINDAI MAKANAN DI TANGGAL INI ✨
                             </button>
                         </div>
@@ -922,7 +819,7 @@
         </main>
     </div>
 
-    <!-- Logika Aplikasi -->
-    <script type="module" src="app.js"></script>
+    <script src="config.example.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
