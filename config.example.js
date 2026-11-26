@@ -1,21 +1,15 @@
 // =====================================================================
-// TEMPLATE KONFIGURASI AMAN UNTUK GITHUB
-// Salin file ini menjadi "config.js" di komputer lokal Anda dan isi key-nya.
-// Jangan pernah mengunggah file "config.js" ke repository publik!
+// KONFIGURASI SUPABASE EDGE FUNCTION & DATABASE
+// Nilai di bawah ini AMAN untuk di-upload ke GitHub (kunci publik).
 // =====================================================================
 
 window.NUTRIFIND_CONFIG = {
-    // Masukkan Gemini API Key Anda dari Google AI Studio (https://aistudio.google.com/)
-    GEMINI_API_KEY: "AQ.Ab8RN6Ivm249EDYQNWAN6N6DeFryk_5oploxmr67NxG9O-nL7Q",
+    // 1. Endpoint Edge Function AI Scanner dari temanmu
+    SCAN_FUNCTION_URL: "https://ouqhentfvjebrvialsti.supabase.co/functions/v1/scan-food",
 
-    // (Opsional) Konfigurasi Firebase Firestore jika ingin menyimpan akun secara cloud
-    APP_ID: "nutrifind-production",
-    FIREBASE_CONFIG: {
-        apiKey: "",
-        authDomain: "",
-        projectId: "",
-        storageBucket: "",
-        messagingSenderId: "",
-        appId: ""
-    }
+    // 2. Tempel Supabase Anon / Publishable Key dari temanmu di sini:
+    SUPABASE_ANON_KEY: "TEMPEL_ANON_KEY_DARI_TEMANMU_DI_SINI",
+
+    // 3. URL Project Supabase
+    SUPABASE_URL: "https://ouqhentfvjebrvialsti.supabase.co"
 };
