@@ -1,87 +1,89 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
 // =====================================================================
-// 0. INISIALISASI CLOUD DATABASE (FIRESTORE) & KONFIGURASI API
+// 0. INISIALISASI SUPABASE EDGE FUNCTION & DATABASE
 // =====================================================================
-const ENV_CONFIG = window.NUTRIFIND_CONFIG || {};
-const apiKey = ENV_CONFIG.GEMINI_API_KEY ? ENV_CONFIG.GEMINI_API_KEY.trim() : "";
+window.NUTRIFIND_CONFIG = window.NUTRIFIND_CONFIG || {
+    SCAN_FUNCTION_URL: "https://ouqhentfvjebrvialsti.supabase.co/functions/v1/scan-food",
+    SUPABASE_ANON_KEY: "sb_publishable_yFKyMT_mn78ZYJWkloma5A_rkRCyEJx",
+    SUPABASE_URL: "https://ouqhentfvjebrvialsti.supabase.co"
+};
 
-const appId = ENV_CONFIG.APP_ID || (typeof __app_id !== 'undefined' ? __app_id : 'nutrifind-default-app');
-let db = null;
-let auth = null;
-let firebaseUser = null;
-let isCloudReady = false;
+let supabaseClient = null;
+let isSupabaseReady = false;
 
-async function initCloudDatabase() {
+async function initSupabaseDatabase() {
     const statusTextEl = document.getElementById('auth-db-status-text');
     const headerDbEl = document.getElementById('header-db-indicator');
+    const cfg = window.NUTRIFIND_CONFIG || {};
+
     try {
-        const rawFirebaseConfig = ENV_CONFIG.FIREBASE_CONFIG || (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
-        if (rawFirebaseConfig && rawFirebaseConfig.apiKey) {
-            const app = initializeApp(rawFirebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                const cred = await signInWithCustomToken(auth, __initial_auth_token);
-                firebaseUser = cred.user;
-            } else {
-                const cred = await signInAnonymously(auth);
-                firebaseUser = cred.user;
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_URL.startsWith("https://") && cfg.SUPABASE_ANON_KEY && !cfg.SUPABASE_ANON_KEY.includes("TEMPEL")) {
+            supabaseClient = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+            const { error } = await supabaseClient.from('nutrifind_users').select('email').limit(1);
+            if (!error) {
+                isSupabaseReady = true;
+                if (statusTextEl) statusTextEl.textContent = "SUPABASE DB TERHUBUNG";
+                if (headerDbEl) headerDbEl.textContent = "SUPABASE ●";
+                return;
             }
-
-            if (firebaseUser) {
-                isCloudReady = true;
-                if (statusTextEl) statusTextEl.textContent = "CLOUD DB TERHUBUNG";
-                if (headerDbEl) headerDbEl.textContent = "CLOUD SYNC ●";
-            }
-        } else {
-            if (statusTextEl) statusTextEl.textContent = "MODE MEMORI LOKAL";
-            if (headerDbEl) headerDbEl.textContent = "LOCAL SESSION";
         }
+        if (statusTextEl) statusTextEl.textContent = "AI CLOUD SIAP (LOCAL LOG)";
+        if (headerDbEl) headerDbEl.textContent = "LOCAL SESSION";
     } catch (err) {
-        console.warn("Cloud DB fallback ke memori lokal:", err);
-        if (statusTextEl) statusTextEl.textContent = "MODE MEMORI LOKAL";
+        if (statusTextEl) statusTextEl.textContent = "AI CLOUD SIAP (LOCAL LOG)";
         if (headerDbEl) headerDbEl.textContent = "LOCAL SESSION";
     }
 }
 
-function emailToDocId(email) {
-    return email.toLowerCase().trim().replace(/[^a-z0-9@._-]/g, '_');
-}
-
-async function fetchAccountFromCloud(email) {
-    if (!isCloudReady || !db || !firebaseUser) return null;
+async function fetchAccountFromSupabase(email) {
+    if (!isSupabaseReady || !supabaseClient) return null;
     try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'nutrifind_accounts', emailToDocId(email));
-        const snap = await getDoc(docRef);
-        return snap.exists() ? snap.data() : null;
+        const { data, error } = await supabaseClient
+            .from('nutrifind_users')
+            .select('*')
+            .eq('email', email.toLowerCase().trim())
+            .maybeSingle();
+
+        if (error || !data) return null;
+        return {
+            email: data.email,
+            password: data.password,
+            name: data.name,
+            calorieTarget: data.calorie_target || 2000,
+            bmiProfile: data.bmi_profile || null,
+            foodLogs: data.food_logs || {},
+            weightHistory: data.weight_history || [],
+            targetWeight: Number(data.target_weight) || 60.0
+        };
     } catch (err) {
         return null;
     }
 }
 
-async function syncCurrentUserToCloud() {
+async function syncCurrentUserToSupabase() {
     const user = getCurrentUser();
-    if (!user || !isCloudReady || !db || !firebaseUser) return;
+    if (!user || !isSupabaseReady || !supabaseClient) return;
     try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'nutrifind_accounts', emailToDocId(user.email));
-        await setDoc(docRef, {
-            ...user,
-            updatedAt: new Date().toISOString()
-        });
+        await supabaseClient
+            .from('nutrifind_users')
+            .upsert({
+                email: user.email,
+                password: user.password,
+                name: user.name,
+                calorie_target: user.calorieTarget,
+                bmi_profile: user.bmiProfile,
+                food_logs: user.foodLogs,
+                weight_history: user.weightHistory,
+                target_weight: user.targetWeight,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'email' });
     } catch (err) {
-        console.warn("Gagal sinkronisasi ke Cloud DB:", err);
+        console.warn("Gagal sinkronisasi ke Supabase:", err);
     }
 }
 
 // =====================================================================
 // 1. REFERENSI DAILY VALUE (AKG HARIAN) & TANGGAL
 // =====================================================================
-const GEMINI_MODEL = "gemini-3-flash-preview";
-
 const DAILY_VALUE_STANDARDS = {
     protein: { label: "Protein", unit: "g", dv: 50 },
     carbs: { label: "Karbohidrat", unit: "g", dv: 275 },
@@ -175,26 +177,12 @@ const inMemoryUsers = {
                     fat: 24,
                     fiber: 4.5,
                     micros: { vitaminA: 210, vitaminC: 14, calcium: 95, iron: 3.1, sodium: 980, potassium: 420 }
-                },
-                {
-                    id: "f-yest-2",
-                    name: "Gado-Gado Lontong Lengkap",
-                    portion: "1 Porsi (400g)",
-                    time: "13:00",
-                    calories: 580,
-                    protein: 22,
-                    carbs: 64,
-                    fat: 26,
-                    fiber: 9.0,
-                    micros: { vitaminA: 340, vitaminC: 38, calcium: 210, iron: 4.2, sodium: 610, potassium: 780 }
                 }
             ]
         },
         weightHistory: [
             { date: shiftDateStr(TODAY_STR, -14), weight: 71.0, note: "Awal mulai program" },
-            { date: shiftDateStr(TODAY_STR, -10), weight: 70.3, note: "Kurangi minuman manis" },
             { date: shiftDateStr(TODAY_STR, -7), weight: 69.8, note: "Rutin jalan pagi 30 menit" },
-            { date: shiftDateStr(TODAY_STR, -3), weight: 69.1, note: "Pagi setelah bangun" },
             { date: TODAY_STR, weight: 68.5, note: "Turun stabil!" }
         ],
         targetWeight: 64.0
@@ -210,6 +198,7 @@ let appState = {
     calendarMonth: new Date().getMonth(),
     selectedCalendarDate: TODAY_STR,
     lastScanResult: null,
+    lastPreviewUrl: null,
     cameraStream: null
 };
 
@@ -245,7 +234,7 @@ function showToast(message, type = 'success') {
 }
 
 // =====================================================================
-// 4. LOGIN & DAFTAR AKUN
+// 4. LOGIN & DAFTAR AKUN (SUPABASE SYNC)
 // =====================================================================
 function switchAuthTab(mode) {
     appState.authMode = mode;
@@ -287,12 +276,12 @@ async function handleAuthSubmit(event) {
     errBox.classList.add('hidden');
     const originalBtnText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = "MEMPROSES AKUN...";
+    submitBtn.textContent = "MEMPROSES...";
 
     try {
-        const cloudAccount = await fetchAccountFromCloud(email);
-        if (cloudAccount) {
-            inMemoryUsers[email] = cloudAccount;
+        const dbAccount = await fetchAccountFromSupabase(email);
+        if (dbAccount) {
+            inMemoryUsers[email] = dbAccount;
         }
 
         if (appState.authMode === 'login') {
@@ -321,7 +310,7 @@ async function handleAuthSubmit(event) {
                 targetWeight: 60.0
             };
             appState.currentUserEmail = email;
-            await syncCurrentUserToCloud();
+            await syncCurrentUserToSupabase();
             completeLogin(email, true);
         }
     } finally {
@@ -335,12 +324,12 @@ async function loginWithDemoAccount() {
     document.getElementById('auth-email').value = demoEmail;
     document.getElementById('auth-password').value = "demo123";
 
-    const cloudDemo = await fetchAccountFromCloud(demoEmail);
-    if (cloudDemo) {
-        inMemoryUsers[demoEmail] = cloudDemo;
+    const dbDemo = await fetchAccountFromSupabase(demoEmail);
+    if (dbDemo) {
+        inMemoryUsers[demoEmail] = dbDemo;
     } else {
         appState.currentUserEmail = demoEmail;
-        await syncCurrentUserToCloud();
+        await syncCurrentUserToSupabase();
     }
     completeLogin(demoEmail, false);
 }
@@ -472,7 +461,7 @@ async function saveBmiProfile() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 
-    await syncCurrentUserToCloud();
+    await syncCurrentUserToSupabase();
     refreshAllUI();
     showToast(`Target disesuaikan ke ${calc.recommendedCalories.toLocaleString('id-ID')} kkal/hari (BMI ${calc.bmi})!`, 'success');
 }
@@ -553,21 +542,21 @@ function resetToToday() {
 }
 
 // =====================================================================
-// 7. KAMERA, UNGGAH FOTO & GEMINI VISION API
+// 7. KAMERA, UNGGAH FOTO & SUPABASE EDGE FUNCTION AI
 // =====================================================================
 function handleDragOver(e) {
     e.preventDefault();
-    document.getElementById('dropzone').classList.add('border-emerald-500', 'bg-emerald-50/50');
+    document.getElementById('dropzone').classList.add('is-dragover');
 }
 
 function handleDragLeave(e) {
     e.preventDefault();
-    document.getElementById('dropzone').classList.remove('border-emerald-500', 'bg-emerald-50/50');
+    document.getElementById('dropzone').classList.remove('is-dragover');
 }
 
 function handleDrop(e) {
     e.preventDefault();
-    document.getElementById('dropzone').classList.remove('border-emerald-500', 'bg-emerald-50/50');
+    document.getElementById('dropzone').classList.remove('is-dragover');
     const file = e.dataTransfer?.files?.[0];
     if (file && file.type.startsWith('image/')) {
         processUploadedImageFile(file);
@@ -580,6 +569,7 @@ function handleFileSelect(e) {
     const file = e.target.files?.[0];
     if (file) {
         processUploadedImageFile(file);
+        e.target.value = "";
     }
 }
 
@@ -588,14 +578,36 @@ function processUploadedImageFile(file) {
     const reader = new FileReader();
     reader.onload = function(evt) {
         const dataUrl = evt.target.result;
-        displayPreviewImage(dataUrl);
-        const base64Data = dataUrl.split(',')[1];
-        analyzeFoodImageWithGemini(base64Data, file.type || 'image/jpeg', null);
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.getElementById('helper-canvas');
+            const maxDim = 900;
+            let w = img.width;
+            let h = img.height;
+            if (w > maxDim || h > maxDim) {
+                if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                else { w = Math.round((w * maxDim) / h); h = maxDim; }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            const compressedUrl = canvas.toDataURL('image/jpeg', 0.85);
+            displayPreviewImage(compressedUrl);
+            analyzeFoodImageWithSupabase(compressedUrl, null);
+        };
+        img.onerror = function() {
+            showToast("Gagal membaca gambar. Coba file gambar lain.", "error");
+        };
+        img.src = dataUrl;
     };
     reader.readAsDataURL(file);
 }
 
 function displayPreviewImage(dataUrl) {
+    appState.lastPreviewUrl = dataUrl;
     const img = document.getElementById('food-preview-img');
     const placeholder = document.getElementById('scanner-placeholder');
     const video = document.getElementById('camera-video');
@@ -635,6 +647,13 @@ function stopCamera() {
     document.getElementById('camera-video').classList.add('hidden');
     document.getElementById('camera-active-controls').classList.add('hidden');
     document.getElementById('default-scan-controls').classList.remove('hidden');
+
+    if (appState.lastPreviewUrl) {
+        document.getElementById('food-preview-img').classList.remove('hidden');
+        document.getElementById('scanner-placeholder').classList.add('hidden');
+    } else {
+        document.getElementById('scanner-placeholder').classList.remove('hidden');
+    }
 }
 
 function capturePhotoFromCamera() {
@@ -648,7 +667,7 @@ function capturePhotoFromCamera() {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
     stopCamera();
     displayPreviewImage(dataUrl);
-    analyzeFoodImageWithGemini(dataUrl.split(',')[1], 'image/jpeg', null);
+    analyzeFoodImageWithSupabase(dataUrl, null);
 }
 
 const PRESET_FOOD_DATA = {
@@ -692,6 +711,7 @@ const PRESET_FOOD_DATA = {
 
 function runSampleFoodScan(presetKey) {
     stopCamera();
+    document.getElementById('api-error-banner').classList.add('hidden');
     const canvas = document.getElementById('helper-canvas');
     canvas.width = 480;
     canvas.height = 360;
@@ -725,109 +745,84 @@ function runSampleFoodScan(presetKey) {
     const emoji = presetKey === 'nasgor' ? '🍳' : (presetKey === 'salad' ? '🥗' : '🍣');
     ctx.fillText(emoji, 240, 175);
 
-    ctx.font = 'bold 16px Inter, sans-serif';
+    ctx.font = 'bold 16px Plus Jakarta Sans, sans-serif';
     ctx.fillStyle = '#334155';
     ctx.fillText(PRESET_FOOD_DATA[presetKey].name, 240, 332);
 
     const dataUrl = canvas.toDataURL('image/png');
     displayPreviewImage(dataUrl);
-    analyzeFoodImageWithGemini(dataUrl.split(',')[1], 'image/png', PRESET_FOOD_DATA[presetKey]);
+    analyzeFoodImageWithSupabase(dataUrl, PRESET_FOOD_DATA[presetKey]);
 }
 
-async function analyzeFoodImageWithGemini(base64Data, mimeType, fallbackPreset) {
+async function analyzeFoodImageWithSupabase(imageDataUrl, fallbackPreset) {
     const overlay = document.getElementById('scanning-overlay');
+    const errBanner = document.getElementById('api-error-banner');
+    const errDetail = document.getElementById('api-error-detail');
     overlay.classList.remove('hidden');
+    errBanner.classList.add('hidden');
 
-    const promptText = `Analisis gambar makanan ini sebagai ahli gizi profesional dalam Bahasa Indonesia. Identifikasi nama makanan, estimasi porsi, kalori, makronutrisi (protein, carbs, fat, fiber dalam gram), serta mikronutrisi (vitaminA dalam mcg, vitaminC dalam mg, calcium dalam mg, iron dalam mg, sodium dalam mg, potassium dalam mg). Berikan juga daftar bahan dan saran nutrisi singkat.`;
-
-    const payload = {
-        contents: [{
-            role: "user",
-            parts: [
-                { text: promptText },
-                { inlineData: { mimeType, data: base64Data } }
-            ]
-        }],
-        generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: "OBJECT",
-                properties: {
-                    name: { type: "STRING" },
-                    portion: { type: "STRING" },
-                    calories: { type: "NUMBER" },
-                    protein: { type: "NUMBER" },
-                    carbs: { type: "NUMBER" },
-                    fat: { type: "NUMBER" },
-                    fiber: { type: "NUMBER" },
-                    micros: {
-                        type: "OBJECT",
-                        properties: {
-                            vitaminA: { type: "NUMBER" },
-                            vitaminC: { type: "NUMBER" },
-                            calcium: { type: "NUMBER" },
-                            iron: { type: "NUMBER" },
-                            sodium: { type: "NUMBER" },
-                            potassium: { type: "NUMBER" }
-                        },
-                        required: ["vitaminA", "vitaminC", "calcium", "iron", "sodium", "potassium"]
-                    },
-                    ingredients: { type: "ARRAY", items: { type: "STRING" } },
-                    advice: { type: "STRING" }
-                },
-                required: ["name", "portion", "calories", "protein", "carbs", "fat", "fiber", "micros", "ingredients", "advice"]
-            }
-        }
-    };
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    const cfg = window.NUTRIFIND_CONFIG || {};
+    const scanUrl = cfg.SCAN_FUNCTION_URL || "https://ouqhentfvjebrvialsti.supabase.co/functions/v1/scan-food";
+    const anonKey = (cfg.SUPABASE_ANON_KEY || "").trim();
 
     let parsedResult = null;
-    const delays = [1000, 2000];
+    let lastError = "";
 
-    if (apiKey) {
-        for (let attempt = 0; attempt <= delays.length; attempt++) {
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (rawText) {
-                    parsedResult = JSON.parse(rawText);
-                    break;
-                }
-            } catch (err) {
-                if (attempt < delays.length) {
-                    await new Promise(res => setTimeout(res, delays[attempt]));
-                }
-            }
+    try {
+        const parts = imageDataUrl.split(',');
+        const mimeMatch = parts[0].match(/:(.*?);/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const imageBase64 = parts[1] || "";
+
+        const headers = {
+            "Content-Type": "application/json"
+        };
+        if (anonKey && !anonKey.includes("TEMPEL")) {
+            headers["apikey"] = anonKey;
+            headers["Authorization"] = `Bearer ${anonKey}`;
         }
-    } else {
-        await new Promise(res => setTimeout(res, 1100));
+
+        const response = await fetch(scanUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                imageBase64,
+                base64Data: imageBase64,
+                mimeType
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            lastError = data?.error?.message || data?.error || `HTTP ${response.status}`;
+        } else if (data && data.name) {
+            parsedResult = data;
+        } else {
+            lastError = "Format respons AI tidak valid.";
+        }
+    } catch (err) {
+        lastError = err.message || "Gagal terhubung ke Supabase Edge Function.";
     }
 
     overlay.classList.add('hidden');
 
-    const finalData = parsedResult || fallbackPreset || {
-        name: "Hidangan Sehat Seimbang",
-        portion: "1 Porsi (320g)",
-        calories: 485,
-        protein: 28,
-        carbs: 52,
-        fat: 16,
-        fiber: 6.0,
-        micros: { vitaminA: 240, vitaminC: 26, calcium: 135, iron: 3.2, sodium: 520, potassium: 610 },
-        ingredients: ["Sumber Protein", "Karbohidrat Kompleks", "Sayuran Hijau", "Rempah Alami"],
-        advice: "Komposisi makronutrisi cukup seimbang dengan kontribusi serat dan kalium yang baik untuk energi harian."
-    };
+    if (parsedResult) {
+        appState.lastScanResult = parsedResult;
+        renderScanResultCard(parsedResult);
+        showToast(`AI mendeteksi: ${parsedResult.name}`, 'success');
+        return;
+    }
 
-    appState.lastScanResult = finalData;
-    renderScanResultCard(finalData);
-    showToast(`Berhasil memindai: ${finalData.name}`, 'success');
+    if (fallbackPreset) {
+        appState.lastScanResult = fallbackPreset;
+        renderScanResultCard(fallbackPreset);
+        showToast(`Simulasi menu: ${fallbackPreset.name}`, 'info');
+        return;
+    }
+
+    errBanner.classList.remove('hidden');
+    errDetail.textContent = `${lastError}. Pastikan Supabase Edge Function scan-food aktif dan GEMINI_API_KEY sudah diatur di Secrets Supabase.`;
+    showToast("Gagal memindai gambar via Supabase.", "error");
 }
 
 // =====================================================================
@@ -844,27 +839,27 @@ function renderScanResultCard(item) {
     document.getElementById('result-content').classList.remove('hidden');
 
     document.getElementById('res-food-name').textContent = item.name;
-    document.getElementById('res-portion').textContent = item.portion;
-    document.getElementById('res-calories').textContent = Math.round(item.calories).toLocaleString('id-ID');
+    document.getElementById('res-portion').textContent = item.portion || "1 Porsi";
+    document.getElementById('res-calories').textContent = Math.round(item.calories || 0).toLocaleString('id-ID');
 
     const proDv = calcDvPct('protein', item.protein);
     const carbDv = calcDvPct('carbs', item.carbs);
     const fatDv = calcDvPct('fat', item.fat);
     const fibDv = calcDvPct('fiber', item.fiber);
 
-    document.getElementById('res-protein').textContent = item.protein;
+    document.getElementById('res-protein').textContent = item.protein ?? 0;
     document.getElementById('res-protein-dv').textContent = `${proDv}% DV`;
     document.getElementById('bar-protein').style.width = `${Math.min(100, proDv)}%`;
 
-    document.getElementById('res-carbs').textContent = item.carbs;
+    document.getElementById('res-carbs').textContent = item.carbs ?? 0;
     document.getElementById('res-carbs-dv').textContent = `${carbDv}% DV`;
     document.getElementById('bar-carbs').style.width = `${Math.min(100, carbDv)}%`;
 
-    document.getElementById('res-fat').textContent = item.fat;
+    document.getElementById('res-fat').textContent = item.fat ?? 0;
     document.getElementById('res-fat-dv').textContent = `${fatDv}% DV`;
     document.getElementById('bar-fat').style.width = `${Math.min(100, fatDv)}%`;
 
-    document.getElementById('res-fiber').textContent = item.fiber;
+    document.getElementById('res-fiber').textContent = item.fiber ?? 0;
     document.getElementById('res-fiber-dv').textContent = `${fibDv}% DV`;
     document.getElementById('bar-fiber').style.width = `${Math.min(100, fibDv)}%`;
 
@@ -921,9 +916,9 @@ function saveCurrentScanToLog() {
         ...JSON.parse(JSON.stringify(appState.lastScanResult))
     });
 
-    syncCurrentUserToCloud();
+    syncCurrentUserToSupabase();
     refreshAllUI();
-    showToast(`"${appState.lastScanResult.name}" tersimpan!`, 'success');
+    showToast(`"${appState.lastScanResult.name}" ditambahkan ke catatan!`, 'success');
 }
 
 function deleteFoodLogItem(dateKey, itemId) {
@@ -931,7 +926,7 @@ function deleteFoodLogItem(dateKey, itemId) {
     if (!user || !user.foodLogs[dateKey]) return;
 
     user.foodLogs[dateKey] = user.foodLogs[dateKey].filter(item => item.id !== itemId);
-    syncCurrentUserToCloud();
+    syncCurrentUserToSupabase();
     refreshAllUI();
     showToast("Item makanan dihapus dari catatan.", "info");
 }
@@ -996,7 +991,7 @@ function renderDailyFoodLog() {
                 </div>
             </div>
             <button type="button" onclick="deleteFoodLogItem('${dateKey}', '${item.id}')" class="p-2 rounded-xl bg-rose-100 hover:bg-rose-500 hover:text-white text-[#0F172A] border border-[#0F172A] transition-colors" title="Hapus Item">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
         </div>
     `).join('');
@@ -1032,7 +1027,7 @@ function handleAddWeightEntry(event) {
     document.getElementById('wt-input-kg').value = '';
     document.getElementById('wt-input-note').value = '';
 
-    syncCurrentUserToCloud();
+    syncCurrentUserToSupabase();
     renderWeightTracker();
     showToast(`Berat badan ${kgVal} kg tersimpan!`, 'success');
 }
@@ -1041,7 +1036,7 @@ function deleteWeightEntry(dateStr) {
     const user = getCurrentUser();
     if (!user) return;
     user.weightHistory = user.weightHistory.filter(w => w.date !== dateStr);
-    syncCurrentUserToCloud();
+    syncCurrentUserToSupabase();
     renderWeightTracker();
     showToast("Catatan berat badan dihapus.", "info");
 }
@@ -1110,7 +1105,7 @@ function renderWeightTracker() {
                     <p class="text-xs font-semibold text-slate-600 mt-0.5">${formatIndoDate(entry.date)} • <span class="text-[#10B981]">${entry.note}</span></p>
                 </div>
                 <button type="button" onclick="deleteWeightEntry('${entry.date}')" class="p-1.5 rounded-lg bg-rose-100 hover:bg-rose-500 hover:text-white text-[#0F172A] border border-[#0F172A]" title="Hapus">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg width="16" height="16" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
         `;
@@ -1313,35 +1308,6 @@ function renderCalendarDetailPanel() {
     }
 }
 
-Object.assign(window, {
-    switchAuthTab,
-    togglePasswordVisibility,
-    handleAuthSubmit,
-    loginWithDemoAccount,
-    handleLogout,
-    openBmiModal,
-    skipOrCloseBmiModal,
-    recalculateBmiPreview,
-    saveBmiProfile,
-    switchMainView,
-    changeActiveDate,
-    resetToToday,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    handleFileSelect,
-    startCamera,
-    stopCamera,
-    capturePhotoFromCamera,
-    runSampleFoodScan,
-    saveCurrentScanToLog,
-    deleteFoodLogItem,
-    handleAddWeightEntry,
-    deleteWeightEntry,
-    changeCalendarMonth,
-    jumpCalendarToToday,
-    selectCalendarDate,
-    scanForSelectedCalendarDate
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initSupabaseDatabase, 250);
 });
-
-initCloudDatabase();
